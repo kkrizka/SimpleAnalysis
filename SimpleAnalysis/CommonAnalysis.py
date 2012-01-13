@@ -85,10 +85,13 @@ class Sum(Analysis.Variable):
 ## missing Et - Sum of momenta of all final state neutrinos
 class MissingEt(Analysis.Variable):
     def __init__(self):
-        Analysis.Variable.__init__(self,"Missing E_{T} (GeV)",100,0,500)
+        Analysis.Variable.__init__(self,"Missing E_{T} (GeV)")
+        self.nbins=100
+        self.minval=0
+        self.maxval=500
 
-    def value(self,particles):
-        final_particles=TMCHelper.final_state_particles(particles,2)
+    def calculate(self):
+        final_particles=TMCHelper.final_state_particles(self.particles,2,False)
         METx=0
         METy=0
         for particle in final_particles:
