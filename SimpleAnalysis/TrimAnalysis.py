@@ -22,13 +22,11 @@ class TrimAnalysis(Analysis.Analysis):
     def init_eventfile(self,event_file):
         # Prepare the output stuff
         self.outfile=TFile(event_file.outFileName,"RECREATE")
+        
         self.outtree=TTree(event_file.outTreeName,event_file.outTreeName)
-
-        particles=TClonesArray("TParticle",1000);
-        self.outtree.Branch("particle",particles);
+        self.outtree.Branch("particle",self.particles);
 
     def event(self,particles):
-        self.outtree.SetBranchAddress("particle",particles)
         self.outtree.Fill()
 
     def deinit_eventfile(self,event_file):
