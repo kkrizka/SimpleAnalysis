@@ -50,7 +50,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
     def deinit(self):
         # Draw everything
         for variable in self.variables:
-            name="c1_%s"%variable.title
+            name="c1_%s"%variable.__class__.__name__
             c=TCanvas(name,name)
             self.store(c)
 #            c.SetLogy(True)
