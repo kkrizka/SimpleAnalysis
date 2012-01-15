@@ -52,15 +52,25 @@ class VariablePlotterAnalysis(Analysis.Analysis):
         for variable in self.variables:
             name="c1_%s"%variable.title
             c=TCanvas(name,name)
+            self.store(c)
 #            c.SetLogy(True)
             variable.histogram.Draw()
             variable.histogram.GetXaxis().SetTitle(variable.title)
-            l=c.BuildLegend(.65,.65,.95,.95)
-            l.Draw()
+
+            if variable.histogram.GetHists().GetSize()>1: # Only bother with legend if have more
+                                                          # than one event file
+                l=c.BuildLegend(.65,.65,.95,.95)
+                self.store(l)
+                l.Draw()
             c.Update()
+
+            # Print it out
             c.SaveAs("%s.png"%name)
-            self.store(l)
-            self.store(c)
+
+            # Dump some stats, while we are there..
+            print variable.title
+            for hist in variable.histogram.GetHists():
+                print "\t%s\t%f\t%f"%(hist.GetTitle(),hist.GetMean(),hist.GetRMS())
 
         
 
