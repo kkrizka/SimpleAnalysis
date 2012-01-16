@@ -19,6 +19,7 @@ class ScatterPlotterAnalysis(Analysis.Analysis):
         self.multigraph_store=dict()
         self.graph_store=dict()
         self.count=0
+        self.file_count=0
 
     def init(self):
         # Book multigraphs for all the variable pairs
@@ -38,6 +39,7 @@ class ScatterPlotterAnalysis(Analysis.Analysis):
             g.SetMarkerColor(event_file.color)
             g.SetTitle(event_file.title)
             self.multigraph_store[variable].Add(g,'p')
+            self.file_count+=1
             self.graph_store[variable]=g
 
     def event(self,particles):
@@ -51,18 +53,22 @@ class ScatterPlotterAnalysis(Analysis.Analysis):
     def deinit(self):
         # Draw everything
         for variable in self.variables:
-            name='c1_%s_vs_%s'%(variable[1].title,variable[0].title)
+            
+            name='c1_%s_vs_%s'%(variable[1].__class__.__name__,variable[0].__class__.__name__)
             c=TCanvas(name,name)
+            self.store(c)
 #            c.SetLogy(True)
             self.multigraph_store[variable].Draw("AP")
             self.multigraph_store[variable].GetXaxis().SetTitle(variable[0].title)
             self.multigraph_store[variable].GetYaxis().SetTitle(variable[1].title)
-            l=c.BuildLegend(.65,.65,.95,.95)
-            l.Draw()
+
+            if self.file_count>1:
+                l=c.BuildLegend(.65,.65,.95,.95)
+                self.store(l)
+                l.Draw()
+
             c.Update()
             c.SaveAs("%s.png"%name)
-            self.store(l)
-            self.store(c)
 
         
 
