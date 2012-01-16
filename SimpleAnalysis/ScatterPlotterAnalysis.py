@@ -37,6 +37,8 @@ class ScatterPlotterAnalysis(Analysis.Analysis):
             # Histogram for this file
             g=TGraph()
             g.SetMarkerColor(event_file.color)
+            g.SetFillColor(event_file.color)
+            g.SetLineColor(event_file.color)
             g.SetTitle(event_file.title)
             self.multigraph_store[variable].Add(g,'p')
             self.file_count+=1
