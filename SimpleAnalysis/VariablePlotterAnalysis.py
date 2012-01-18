@@ -47,7 +47,8 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                    variable.nbins,
                    variable.minval,
                    variable.maxval)
-            h.SetLineColor(event_file.color)
+            if hasattr(event_file,'color'):
+                h.SetLineColor(event_file.color)
             variable.histogram.Add(h)
             variable.current_histogram=h
 
@@ -58,7 +59,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 for value in values:
                     variable.current_histogram.Fill(value)
             else:
-               variable.current_histogram.Fill(values) 
+                variable.current_histogram.Fill(values) 
 
     def deinit_eventfile(self,event_file):
         if self.norm_mode=='none':
