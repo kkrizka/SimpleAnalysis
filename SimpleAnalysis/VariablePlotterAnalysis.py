@@ -6,18 +6,30 @@ from ROOT import *
 # It loops over all of the events that pass a cut and makes a histogram of
 # all defined variables. Each histogram consists of several other
 # histograms stacked on top of each other, with the "other histograms" 
-# corresponding to the different event ROOT files defined. In addition,
-# the "other histograms" are scaled to have an area corresponding to their
-# cross-section, before any of the cuts are applied.
+# corresponding to the different event ROOT files defined.
+
+# The "other histograms" are scaled to have an area corresponding to a
+# requested area. Possible choices are:
+#  norm_mode: "none" - leave as is, no normalization (Default)
+#  norm_mode: "1" - scale to area of one
+#  norm_mode: "xsec" - cross-section of event, before any of the cuts are applied.
+#
+# If the attribute "stack" is set to False,  then the "nostack" option is used to
+# draw the histogams. It is set to True by default.
+#
+# If a variable returns a list of numbers, all of them are added to a histogram
+# invididually.
 #
 # The EventFile's need to have a "color" attribute that corresponds to
-# the color that will be used to fill the drawn histogram
+# the color that will be used to draw the histogram line.
 
 class VariablePlotterAnalysis(Analysis.Analysis):
     def __init__(self):
         Analysis.Analysis.__init__(self)
 
         self.variables=[]
+        self.norm_mode='none'
+        self.stack=True
 
     def init(self):
         # Book histograms for all the variables
@@ -35,17 +47,29 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                    variable.nbins,
                    variable.minval,
                    variable.maxval)
-            h.SetFillColor(event_file.color)
+            h.SetLineColor(event_file.color)
             variable.histogram.Add(h)
             variable.current_histogram=h
 
     def event(self,particles):
         for variable in self.variables:
-            variable.current_histogram.Fill(variable.value())
+            values=variable.value()
+            if type(values)==list:
+                for value in values:
+                    variable.current_histogram.Fill(value)
+            else:
+               variable.current_histogram.Fill(values) 
 
     def deinit_eventfile(self,event_file):
+        if self.norm_mode=='none':
+            return
+        elif self.norm_mode=='1':
+            scale=1
+        elif self.norm_mode=='xsec':
+            scale=event_file.effxsec
+    
         for variable in self.variables:
-            variable.current_histogram.Scale(event_file.effxsec/variable.current_histogram.GetEntries())
+            variable.current_histogram.Scale(scale/variable.current_histogram.GetEntries())
 
     def deinit(self):
         # Draw everything
@@ -54,7 +78,10 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             c=TCanvas(name,name)
             self.store(c)
 #            c.SetLogy(True)
-            variable.histogram.Draw()
+            if self.stack:
+                variable.histogram.Draw()
+            else:
+                variable.histogram.Draw('nostack')
             variable.histogram.GetXaxis().SetTitle(variable.title)
 
             if variable.histogram.GetHists().GetSize()>1: # Only bother with legend if have more
