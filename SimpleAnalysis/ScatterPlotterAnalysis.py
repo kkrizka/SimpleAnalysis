@@ -62,7 +62,9 @@ class ScatterPlotterAnalysis(Analysis.Analysis):
 #            c.SetLogy(True)
             self.multigraph_store[variable].Draw("AP")
             self.multigraph_store[variable].GetXaxis().SetTitle(variable[0].title)
+            self.multigraph_store[variable].GetXaxis().SetRangeUser(variable[0].minval,variable[0].maxval)
             self.multigraph_store[variable].GetYaxis().SetTitle(variable[1].title)
+            self.multigraph_store[variable].GetYaxis().SetRangeUser(variable[1].minval,variable[1].maxval)
 
             if self.file_count>1:
                 l=c.BuildLegend(.65,.65,.95,.95)
