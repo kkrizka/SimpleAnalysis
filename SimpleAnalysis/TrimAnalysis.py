@@ -21,8 +21,12 @@ class TrimAnalysis(Analysis.Analysis):
 
     def init_eventfile(self,event_file):
         # Prepare the output stuff
-        self.outfile=TFile(event_file.outFileName,"RECREATE")
-        
+        self.outfile=TFile(event_file.outFileName,"UPDATE")
+
+        # Delete any existing trees in the file, if exists
+        self.outfile.Delete("%s;*"%event_file.outTreeName)
+
+        # Create a new tree
         self.outtree=TTree(event_file.outTreeName,event_file.outTreeName)
         self.outtree.Branch("particle",self.particles);
 
