@@ -1,6 +1,6 @@
 from ROOT import *
 
-from . import VariableFactory
+import VariableFactory
 
 ##
 # This is a general class for calculating a variable for an
