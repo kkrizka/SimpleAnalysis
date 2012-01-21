@@ -21,6 +21,7 @@ class Variable:
         self.eventID=None
         self.particles=None
         self.title=title
+        self.name=self.__class__.__name__
 
         # setup the cache
         self.cached_eventID=None

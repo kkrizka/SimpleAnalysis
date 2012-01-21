@@ -18,6 +18,7 @@ def get(variable,*args):
     key=str(variable)+str(args)
     if(key not in _cache):
         _cache[key]=variable(*args)
+        _cache[key].name=_cache[key].name+str(args)
         _cache[key].particles=_particles
         _cache[key].eventID=_eventID
 

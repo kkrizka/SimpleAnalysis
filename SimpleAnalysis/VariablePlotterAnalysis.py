@@ -75,8 +75,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
     def deinit(self):
         # Draw everything
         for variable in self.variables:
-            name="c1_%s"%variable.__class__.__name__
-            c=TCanvas(name,name)
+            c=TCanvas(variable.name,variable.name)
             self.store(c)
 #            c.SetLogy(True)
             if self.stack:
@@ -93,7 +92,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             c.Update()
 
             # Print it out
-            c.SaveAs("%s.png"%name)
+            c.SaveAs("%s.png"%variable.name)
 
             # Dump some stats, while we are there..
             print variable.title
