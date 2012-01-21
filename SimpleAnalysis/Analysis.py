@@ -168,7 +168,7 @@ class Analysis:
             self.init_eventfile(event_file)
 
             print "********************************************************************************"
-            print "* Event File: %s                        "%event_file.path
+            print "* Event File: %s   Event Tree: %s       "%(event_file.path,event_file.treeName)
             print "* Cross-section: %f pb                  "%event_file.xsec
             print "* Number of Events: %d                  "%t.GetEntries()
             print "********************************************************************************"
