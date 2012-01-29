@@ -109,15 +109,15 @@ class EventFile:
 ## function.
 ##
 ## Internal parameters that configure this class are:
-##  test - Causes the analysis to process only the first 10 files from each event file.
-##         (False by default)
+##  nevents - Causes the analysis to process only the first nevents events from
+##            each event file. Set to None to go over all of them. (None by default)
 ##  eventfiles - A list of EventFile objects that represent the event files
 ##               to be looped over.
 ##  cuts - A list of Cut objects that represent the cuts that will be
 ##         applied
 class Analysis:
     def __init__(self):
-        self.test=False
+        self.nevents=None
         self.eventfiles=[]
         self.cuts=[]
 
@@ -178,8 +178,8 @@ class Analysis:
             events_processed=0
 
             nEvents=0
-            if(self.test):
-                nEvents=10
+            if(self.nevents!=None):
+                nEvents=self.nevents
             else:
                 nEvents=t.GetEntries()
             for i in range(0,nEvents):
