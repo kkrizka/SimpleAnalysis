@@ -70,7 +70,8 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             scale=event_file.effxsec
     
         for variable in self.variables:
-            variable.current_histogram.Scale(scale/variable.current_histogram.GetEntries())
+            if variable.current_histogram.GetEntries()>0:
+                variable.current_histogram.Scale(scale/variable.current_histogram.GetEntries())
 
     def deinit(self):
         # Draw everything
