@@ -153,6 +153,8 @@ class Analysis:
         VariableFactory.setParticles(self.particles)
 
         for event_file in self.eventfiles:
+            VariableFactory.setEventFile(event_file)
+
             # Open the file
             f=TFile(event_file.path)
             if f.FindKey(event_file.treeName)==None:
@@ -169,7 +171,7 @@ class Analysis:
 
             print "********************************************************************************"
             print "* Event File: %s   Event Tree: %s       "%(event_file.path,event_file.treeName)
-            print "* Cross-section: %f pb                  "%event_file.xsec
+            print "* Cross-section: %e pb                  "%event_file.xsec
             print "* Number of Events: %d                  "%t.GetEntries()
             print "********************************************************************************"
 
@@ -209,8 +211,8 @@ class Analysis:
             event_file.effxsec=1.0*event_file.xsec*events_passed/events_processed
             self.deinit_eventfile(event_file)
             # Print out a summary
-            print "Cut Efficiency: %f"%(float(events_passed)/events_processed)
-            print "Effective Cross-section (xsec*cut_efficiency): %f"%(event_file.effxsec)
+            print "Cut Efficiency: %d/%d = %f"%(events_passed,events_processed,(float(events_passed)/events_processed))
+            print "Effective Cross-section (xsec*cut_efficiency): %e"%(event_file.effxsec)
 
             f.Close()
         self.deinit()

@@ -1,12 +1,18 @@
 _cache=dict()
 
 _particles=None
+_eventFile=None
 _eventID=None
 
 def setParticles(particles):
     _particles=particles
     for key in _cache:
         _cache[key].particles=particles
+
+def setEventFile(eventFile):
+    _eventFile=eventFile
+    for key in _cache:
+        _cache[key].eventFile=eventFile
 
 def setEventID(eventID):
     _eventID=eventID
