@@ -45,7 +45,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
         # file
         for variable in self.variables:
             # Histogram for this file
-            h=TH1F("%s-%s-%s"%(variable.title,event_file.path,event_file.treeName),
+            h=TH1F("%s-%s-%s"%(variable,event_file.path,event_file.treeName),
                    event_file.title,
                    variable.nbins,
                    variable.minval,
