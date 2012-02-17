@@ -20,6 +20,9 @@ from ROOT import *
 # If a variable returns a list of numbers, all of them are added to a histogram
 # invididually.
 #
+# If a value is a touple, then the first entry is taken to be the value to
+# fill the histogram and the second is the weight.
+#
 # The EventFile's need to have a "color" attribute that corresponds to
 # the color that will be used to draw the histogram line.
 
@@ -55,11 +58,14 @@ class VariablePlotterAnalysis(Analysis.Analysis):
     def event(self,particles):
         for variable in self.variables:
             values=variable.value()
-            if type(values)==list:
-                for value in values:
+            if type(values)!=list:
+                values=[values]
+                
+            for value in values:
+                if type(value)==tuple:
+                    variable.current_histogram.Fill(value[0],value[1])
+                else:
                     variable.current_histogram.Fill(value)
-            else:
-                variable.current_histogram.Fill(values) 
 
     def deinit_eventfile(self,event_file):
         if self.norm_mode=='none':
