@@ -1,5 +1,6 @@
 import Analysis
 from ROOT import *
+import inspect
 
 # This is a general class to run the analysis on a set of simulated events.
 # The variables and cuts to be run are configured in the following section.
@@ -99,12 +100,11 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             c.Update()
 
             # Print it out
-            c.SaveAs("%s.png"%variable.name)
+            outfileName="%s_%s"%(self.name,variable.name)
+            outfileName=outfileName.replace('/','-')
+            c.SaveAs("%s.png"%outfileName)
 
             # Dump some stats, while we are there..
             print variable.title
             for hist in variable.histogram.GetHists():
                 print "\t%s\t%f\t%f"%(hist.GetTitle(),hist.GetMean(),hist.GetRMS())
-
-        
-
