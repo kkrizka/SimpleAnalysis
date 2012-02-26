@@ -39,17 +39,17 @@ if not os.path.exists(pyfile):
     print "Error: Requested configuration does not exist!"
     sys.exit(-1)
 
+# Some commond settings to make the plots look pretty
+gROOT.SetStyle("Plain");
+gStyle.SetOptStat("");
+gStyle.SetPalette(1);
+TH1.StatOverflows(True)
+
 # Add the script location to path to it can load it's own modules
 pypath=os.path.dirname(os.path.abspath(pyfile))
 sys.path.append(pypath)
 
 execfile(pyfile) # Load the config file
-
-
-# Some commond settings to make the plots look pretty
-gROOT.SetStyle("Plain");
-gStyle.SetOptStat("");
-gStyle.SetPalette(1);
 
 # Autoconfigure some parts of the analysis
 analysis.name=pyfile[:-3]
