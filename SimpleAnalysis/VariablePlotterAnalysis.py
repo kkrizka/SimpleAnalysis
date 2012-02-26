@@ -19,10 +19,14 @@ import inspect
 # draw the histogams. It is set to True by default.
 #
 # If a variable returns a list of numbers, all of them are added to a histogram
-# invididually.
-#
-# If a value is a touple, then the first entry is taken to be the value to
+# invididually. If a value is a touple, then the first entry is taken to be the value to
 # fill the histogram and the second is the weight.
+#
+# The following member attributes of a variable are used:
+#  title: The title to put on the x-axis, without units
+#  units: The units to put after the title, in brackets. If not defined, then
+#         no units are added.
+#  nbins,minval,maxval: The binning to be used for the variable.
 #
 # The EventFile's need to have a "color" attribute that corresponds to
 # the color that will be used to draw the histogram line.
@@ -75,10 +79,10 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             scale=1
         elif self.norm_mode=='xsec':
             scale=event_file.effxsec
-    
+
         for variable in self.variables:
             if variable.current_histogram.GetEntries()>0:
-                variable.current_histogram.Scale(scale/variable.current_histogram.GetEntries())
+                variable.current_histogram.Scale(scale/variable.current_histogram.Integral())
 
     def deinit(self):
         # Draw everything
@@ -90,17 +94,23 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 variable.histogram.Draw()
             else:
                 variable.histogram.Draw('nostack')
-            variable.histogram.GetXaxis().SetTitle(variable.title)
 
+            # Build up the axis title
+            title=variable.title
+            if hasattr(variable,'units'):
+                title+=' (%s)'%variable.units
+            variable.histogram.GetXaxis().SetTitle(title)
+
+            # Add a legend, if necessary
             if variable.histogram.GetHists().GetSize()>1: # Only bother with legend if have more
                                                           # than one event file
-                l=c.BuildLegend(.65,.65,.95,.95)
+                l=c.BuildLegend(.65,.65,.98,.95)
                 self.store(l)
                 l.Draw()
             c.Update()
 
             # Print it out
-            outfileName="%s_%s"%(self.name,variable.name)
+            outfileName="%s-%s"%(self.name,variable.name)
             outfileName=outfileName.replace('/','-')
             c.SaveAs("%s.png"%outfileName)
 

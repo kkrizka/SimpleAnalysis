@@ -16,12 +16,16 @@ import VariableFactory
 # - particle: The list containing all of the particles in the event
 class Variable:
     # Arguments:
-    # - title: The title that will be shown on the x-axis
-    def __init__(self,title):
+    # - name: The name that will be used to identify this variable
+    #         throughout the execution and outputs
+    def __init__(self,name=None):
         self.eventID=None
         self.particles=None
-        self.title=title
-        self.name=self.__class__.__name__
+
+        if name==None:
+            self.name=self.__class__.__name__
+        else:
+            self.name=name
 
         # setup the cache
         self.cached_eventID=None
