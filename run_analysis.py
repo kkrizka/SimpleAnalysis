@@ -1,4 +1,4 @@
-#!/usr/bin/python -i
+#!/usr/bin/python
 
 import sys
 import os.path
@@ -10,6 +10,7 @@ from SimpleAnalysis import CommonAnalysis
 from SimpleAnalysis import VariablePlotterAnalysis
 from SimpleAnalysis import ScatterPlotterAnalysis
 from SimpleAnalysis import TrimAnalysis
+from SimpleAnalysis import VariableComparatorAnalysis
 
 import optparse
 
@@ -50,4 +51,6 @@ gROOT.SetStyle("Plain");
 gStyle.SetOptStat("");
 gStyle.SetPalette(1);
 
+# Autoconfigure some parts of the analysis
+analysis.name=pyfile[:-3]
 analysis.run()
