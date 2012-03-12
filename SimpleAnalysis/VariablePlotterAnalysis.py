@@ -28,9 +28,9 @@ import inspect
 #         no units are added.
 #  nbins,minval,maxval: The binning to be used for the variable.
 #
-# The EventFile's need to have a "color" attribute that corresponds to
-# the color that will be used to draw the histogram line.
-
+# The EventFile's can have the following optional attributes:
+#  color: corresponds to the color that will be used to draw the histogram line.
+#  line: corresponds to the line style of the histogram
 class VariablePlotterAnalysis(Analysis.Analysis):
     def __init__(self):
         Analysis.Analysis.__init__(self)
@@ -57,6 +57,8 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                    variable.maxval)
             if hasattr(event_file,'color'):
                 h.SetLineColor(event_file.color)
+            if hasattr(event_file,'line'):
+                h.SetLineStyle(event_file.line)
             variable.histogram.Add(h)
             variable.current_histogram=h
 
