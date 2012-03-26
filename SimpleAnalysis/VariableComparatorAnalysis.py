@@ -17,6 +17,7 @@ import inspect
 # The following member attributes of each variable are used to configure its
 # appearance:
 #  color: The color use to draw it
+#  line: corresponds to the line style of the histogram
 #  title: The title to put in the legend for it
 #  units: The units to put on the x-axis of the plot. Only the first variable's
 #         value will be used
@@ -41,7 +42,10 @@ class VariableComparatorAnalysis(Analysis.Analysis):
                    variable.nbins,
                    variable.minval,
                    variable.maxval)
-            h.SetLineColor(variable.color)
+            if hasattr(variable,'color'):
+                h.SetLineColor(variable.color)
+            if hasattr(variable,'line'):
+                h.SetLineStyle(variable.line)
 
             self.histograms.append(h)
 
@@ -80,7 +84,7 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         # Print it out
         outfileName="%s"%(self.name)
         outfileName=outfileName.replace('/','-')
-        c.SaveAs("%s.png"%outfileName)
+        c.SaveAs("%s.eps"%outfileName)
 
         # Dump some stats, while we are there..
         print "Statistics:"
