@@ -99,7 +99,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
 
             # Build up the axis title
             title=variable.title
-            if hasattr(variable,'units'):
+            if hasattr(variable,'units') and variable.units!='':
                 title+=' (%s)'%variable.units
             variable.histogram.GetXaxis().SetTitle(title)
 
@@ -114,7 +114,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             # Print it out
             outfileName="%s-%s"%(self.name,variable.name)
             outfileName=outfileName.replace('/','-')
-            c.SaveAs("%s.png"%outfileName)
+            c.SaveAs("%s.eps"%outfileName)
 
             # Dump some stats, while we are there..
             print variable.title

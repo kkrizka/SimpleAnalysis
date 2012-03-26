@@ -72,7 +72,7 @@ class ScatterPlotterAnalysis(Analysis.Analysis):
                 l.Draw()
 
             c.Update()
-            c.SaveAs("%s.png"%name)
+            c.SaveAs("%s.eps"%name)
 
         
 
