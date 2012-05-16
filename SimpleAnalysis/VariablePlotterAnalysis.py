@@ -13,14 +13,15 @@ import inspect
 # requested area. Possible choices are:
 #  norm_mode: "none" - leave as is, no normalization (Default)
 #  norm_mode: "1" - scale to area of one
-#  norm_mode: "xsec" - cross-section of event, before any of the cuts are applied.
+#  norm_mode: "xsec" - cross-section of event, before any of the cuts are 
+#                      applied.
 #
 # If the attribute "stack" is set to False,  then the "nostack" option is used to
 # draw the histogams. It is set to True by default.
 #
 # If a variable returns a list of numbers, all of them are added to a histogram
-# invididually. If a value is a touple, then the first entry is taken to be the value to
-# fill the histogram and the second is the weight.
+# invididually. If a value is a touple, then the first entry is taken to be the 
+# value to fill the histogram and the second is the weight.
 #
 # The following member attributes of a variable are used:
 #  title: The title to put on the x-axis, without units
@@ -45,24 +46,24 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             hs=THStack()
             variable.histogram=hs
 
-    def init_eventfile(self,event_file):
+    def init_eventfile(self):
         # Prepare the histograms for each of the variables for this event
         # file
         for variable in self.variables:
             # Histogram for this file
-            h=TH1F("%s-%s-%s"%(variable,event_file.path,event_file.treeName),
-                   event_file.title,
+            h=TH1F("%s-%s-%s"%(variable,self.eventfile.path,self.eventfile.treeName),
+                   self.eventfile.title,
                    variable.nbins,
                    variable.minval,
                    variable.maxval)
-            if hasattr(event_file,'color'):
-                h.SetLineColor(event_file.color)
-            if hasattr(event_file,'line'):
-                h.SetLineStyle(event_file.line)
+            if hasattr(self.eventfile,'color'):
+                h.SetLineColor(self.eventfile.color)
+            if hasattr(self.eventfile,'line'):
+                h.SetLineStyle(self.eventfile.line)
             variable.histogram.Add(h)
             variable.current_histogram=h
 
-    def event(self,particles):
+    def run_event(self):
         for variable in self.variables:
             values=variable.value()
             if type(values)!=list:
@@ -74,16 +75,16 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 else:
                     variable.current_histogram.Fill(value)
 
-    def deinit_eventfile(self,event_file):
+    def deinit_eventfile(self):
         if self.norm_mode=='none':
             return
         elif self.norm_mode=='1':
             scale=1
         elif self.norm_mode=='xsec':
-            scale=event_file.effxsec
+            scale=self.eventfile.effxsec
 
         for variable in self.variables:
-            if variable.current_histogram.GetEntries()>0:
+            if variable.current_histogram.Integral()>0:
                 variable.current_histogram.Scale(scale/variable.current_histogram.Integral())
 
     def deinit(self):

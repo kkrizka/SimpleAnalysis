@@ -29,27 +29,27 @@ class ScatterPlotterAnalysis(Analysis.Analysis):
             mg=TMultiGraph(name,title)
             self.multigraph_store[variable]=mg
 
-    def init_eventfile(self,event_file):
+    def init_eventfile(self):
         self.count=0 # Null the count for the new graph
         # Prepare the graph for each of the variables for this event
         # file
         for variable in self.variables:
             # Histogram for this file
             g=TGraph()
-            g.SetMarkerColor(event_file.color)
-            g.SetFillColor(event_file.color)
-            g.SetLineColor(event_file.color)
-            g.SetTitle(event_file.title)
+            g.SetMarkerColor(self.eventfile.color)
+            g.SetFillColor(self.eventfile.color)
+            g.SetLineColor(self.eventfile.color)
+            g.SetTitle(self.eventfile.title)
             self.multigraph_store[variable].Add(g,'p')
             self.file_count+=1
             self.graph_store[variable]=g
 
-    def event(self,particles):
+    def run_event(self):
         self.count+=1
         for variable in self.variables:
             self.graph_store[variable].SetPoint(self.count,variable[0].value(),variable[1].value())
 
-    def deinit_eventfile(self,event_file):
+    def deinit_eventfile(self):
         pass
 
     def deinit(self):

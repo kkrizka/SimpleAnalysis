@@ -49,7 +49,7 @@ class VariableComparatorAnalysis(Analysis.Analysis):
 
             self.histograms.append(h)
 
-    def event(self,particles):
+    def run_event(self):
         for i in range(0,len(self.variables)):
             variable=self.variables[i]
             values=variable.value()

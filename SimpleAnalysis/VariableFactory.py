@@ -1,32 +1,28 @@
 _cache=dict()
 
-_particles=None
-_eventFile=None
+_event=None
+_eventfile=None
 _eventID=None
 
-def setParticles(particles):
-    _particles=particles
+def setEvent(event):
+    _event=event
     for key in _cache:
-        _cache[key].particles=particles
+        _cache[key].event=event
+        _cache[key].dirty_bit=True
 
-def setEventFile(eventFile):
-    _eventFile=eventFile
+
+def setEventFile(eventfile):
+    _eventfile=eventfile
     for key in _cache:
-        _cache[key].eventFile=eventFile
-
-def setEventID(eventID):
-    _eventID=eventID
-    for key in _cache:
-        _cache[key].eventID=eventID
-
+        _cache[key].eventfile=eventfile
 
 def get(variable,*args):
     # Create
     key=str(variable)+str(args)
-    if(key not in _cache):
+    if key not in _cache:
         _cache[key]=variable(*args)
-        _cache[key].particles=_particles
-        _cache[key].eventID=_eventID
+        _cache[key].event=_event
+        _cache[key].eventfile=_eventfile
 
     return _cache[key]
 

@@ -19,21 +19,24 @@ class TrimAnalysis(Analysis.Analysis):
     def init(self):
         pass
 
-    def init_eventfile(self,event_file):
+    def init_eventfile(self):
         # Prepare the output stuff
-        self.outfile=TFile(event_file.outFileName,"UPDATE")
-
+        self.outfile=TFile(self.eventfile.outFileName,"UPDATE")
+        
         # Delete any existing trees in the file, if exists
-        self.outfile.Delete("%s;*"%event_file.outTreeName)
+        self.outfile.Delete("%s;*"%self.eventfile.outTreeName)
+        self.outfile.cd()
 
         # Create a new tree
-        self.outtree=TTree(event_file.outTreeName,event_file.outTreeName)
-        self.outtree.Branch("particle",self.particles);
+        self.outtree=self.eventfile.tree.CloneTree(0)
+        self.outtree.SetName(self.eventfile.outTreeName)
+        self.outtree.SetTitle(self.eventfile.outTreeName)
+        self.eventfile.tree.CopyAddresses(self.outtree)
 
-    def event(self,particles):
+    def run_event(self):
         self.outtree.Fill()
 
-    def deinit_eventfile(self,event_file):
+    def deinit_eventfile(self):
         self.outtree.Write()
         self.outfile.Close()
 

@@ -1,5 +1,4 @@
 import Analysis
-import TMCHelper
 
 from math import *
 
@@ -30,32 +29,6 @@ class VariableCut(Analysis.Cut):
             return True
         return False
 
-## Makes sure that there is a high Pt particle in the event.
-class ParticlePtCut(Analysis.Cut):
-    ## Arguments:
-    ## - pdgCode: The pdg code of the particle to lok for
-    ## - minPt: The minimum value of Pt required for this particle
-    ## - needFinal: The results must be final state (Default: True)
-    ## - invert: Boolean indicating whether the cut should be inverted.
-    ##           (Default: False)
-    def __init__(self,pdgCode,minPt,needFinal=True,invert=False):
-        Analysis.Cut.__init__(self,invert)
-        self.pdgCode=pdgCode
-        self.minPt=minPt
-        self.needFinal=needFinal
-
-    ## Cut method
-    def cut(self,particles):
-        for i in range(0,particles.GetEntries()):
-            particle=particles.At(i)
-            if(particle.GetPdgCode()!=self.pdgCode):
-                continue
-            if(particle.GetNDaughters()>0 and self.needFinal):
-                continue
-            if(particle.Pt()>self.minPt):
-                return False
-        return True
-
 
 ### Variables ###
 ## Sum of different variables
@@ -81,23 +54,3 @@ class Sum(Analysis.Variable):
         for variable in self.variables:
             value+=variable.value()
         return value
-
-## missing Et - Sum of momenta of all final state neutrinos
-class MissingEt(Analysis.Variable):
-    def __init__(self):
-        Analysis.Variable.__init__(self,"Missing E_{T} (GeV)")
-        self.nbins=100
-        self.minval=0
-        self.maxval=500
-
-    def calculate(self):
-        final_particles=TMCHelper.final_state_particles(self.particles,2,False)
-        METx=0
-        METy=0
-        for particle in final_particles:
-            code=particle.GetPdgCode()
-            if(abs(code)==12 or abs(code)==14 or abs(code)==16):
-                METx+=particle.Px()
-                METy+=particle.Py()
-
-        return sqrt(METx*METx+METy*METy)
