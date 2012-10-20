@@ -11,6 +11,10 @@ import OutputFactory
 # several times at different parts of the analysis. Only the last value is cached 
 # though.
 #
+# Each variable is required to have set the following properties:
+# - name: The name of the variable. Taken to be the class name by default
+# - type: The type of the variable. Taken to be float by default.
+#
 # Each calculation has the access to the following attributes
 # - event: Entry in the TTree currently being processed
 # - eventfile: Information about the event file being processed
@@ -18,11 +22,16 @@ class Variable:
     # Arguments:
     # - name: The name that will be used to identify this variable
     #         throughout the execution and outputs
-    def __init__(self,name=None):
+    def __init__(self,name=None,type=None):
         if name==None:
             self.name=self.__class__.__name__
         else:
             self.name=name
+
+        if type==None:
+            self.type=float
+        else:
+            self.type=type
 
         # setup the cache
         self.cached_value=None
