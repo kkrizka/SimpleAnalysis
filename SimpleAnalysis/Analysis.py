@@ -1,6 +1,7 @@
 from ROOT import *
 
 import VariableFactory
+import OutputFactory
 
 ##
 # This is a general class for calculating a variable for an event. It also stores
@@ -157,6 +158,7 @@ class Analysis:
     # This takes care of running everything. After you setup the
     # configuration of your analysis, run this!
     def run(self):
+        OutputFactory.setOutputName(self.name)
         self.init()
 
         for eventfile in self.eventfiles:
