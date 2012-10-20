@@ -79,22 +79,19 @@ class Cut:
 ## The required input parameters are:
 ##  path - The path to the ROOT file holding the TPythia8 data
 ##  treeName - The name of the tree holding the TPythia8 data
-##  xsec - The cross-section in pb for the process in the event file
-##  title - The title of the process, used to display it in different parts
 ##
 ## There are also some other parameters required by different derivatives
 ## of the Analysis class.
 ##
 ## Parameters stored by the Analysis class are:
-##  effxsec - xsec * efficiency of cuts (available only after running analysis)
+##  eff - efficiency of cuts (available only after running analysis)
 ##  
 class EventFile:
-    def __init__(self,path,treeName,xsec,title):
+    def __init__(self,path,treeName):
         self.path=path
         self.treeName=treeName
-        self.xsec=xsec
-        self.title=title
-        self.effxsec=xsec
+
+        self.eff=None
 
 
 ## This is just a general class for doing analysis. It has the following
@@ -184,7 +181,6 @@ class Analysis:
 
             print "********************************************************************************"
             print "* Event File: %s   Event Tree: %s       "%(eventfile.path,eventfile.treeName)
-            print "* Cross-section: %e pb                  "%eventfile.xsec
             print "* Number of Events: %d                  "%t.GetEntries()
             print "********************************************************************************"
 
@@ -226,11 +222,10 @@ class Analysis:
 
                 self.run_event()
 
-            eventfile.effxsec=1.0*eventfile.xsec*events_passed/events_processed
+            eventfile.eff=1.0*events_passed/events_processed
             self.deinit_eventfile()
             # Print out a summary
             print "Cut Efficiency: %d/%d = %f"%(events_passed,events_processed,(float(events_passed)/events_processed))
-            print "Effective Cross-section (xsec*cut_efficiency): %e"%(eventfile.effxsec)
 
             f.Close()
         self.deinit()

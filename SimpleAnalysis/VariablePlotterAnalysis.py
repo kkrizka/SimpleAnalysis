@@ -28,6 +28,7 @@ import inspect
 #  units: The units to put after the title, in brackets. If not defined, then
 #         no units are added.
 #  nbins,minval,maxval: The binning to be used for the variable.
+#  xsec: The cross-section to scale each event by
 #
 # The EventFile's can have the following optional attributes:
 #  color: corresponds to the color that will be used to draw the histogram line.
@@ -81,7 +82,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
         elif self.norm_mode=='1':
             scale=1
         elif self.norm_mode=='xsec':
-            scale=self.eventfile.effxsec
+            scale=self.eventfile.xsec*self.eventfile.eff
 
         for variable in self.variables:
             if variable.current_histogram.Integral()>0:
