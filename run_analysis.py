@@ -26,6 +26,9 @@ import optparse
 usage = "usage: %prog [options] config-file.py"
 options_parser=optparse.OptionParser(usage=usage)
 
+options_parser.add_option("-n", "--nevents", dest="nevents", type="int",
+                          help="Number of events to process per file.", metavar="NEVENTS")
+
 (options, args) = options_parser.parse_args()
 
 # ERROR Checking
@@ -53,4 +56,5 @@ execfile(pyfile) # Load the config file
 
 # Autoconfigure some parts of the analysis
 analysis.name=pyfile[:-3]
+analysis.nevents=options.nevents
 analysis.run()
