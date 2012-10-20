@@ -94,6 +94,12 @@ class EventFile:
 
         self.eff=None
 
+## This is a general class for an event. It is up to the reader classes (unimplemented)
+## to define any specific variables. The original event from the ROOT tree is always
+## accessible through the 'raw' attribute.
+class Event:
+    def __init__(self,raw):
+        self.raw=raw
 
 ## This is just a general class for doing analysis. It has the following
 ## functionality:
@@ -207,6 +213,7 @@ class Analysis:
                 print " Event: %d                    "%events_processed
                 print "=============================="
 
+                event=Event(event)
                 VariableFactory.setEvent(event)
                 # Check for cuts..
                 docut=False
