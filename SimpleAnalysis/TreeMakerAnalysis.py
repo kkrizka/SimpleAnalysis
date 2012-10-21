@@ -33,7 +33,7 @@ class TreeMakerAnalysis(Analysis.Analysis):
                 if var.type[0]==list:
                     if var.type[1]==float:
                         var.pointer=std.vector('float')()
-                    elif var.type[0]==int:
+                    elif var.type[1]==int:
                         var.pointer=std.vector('int')()
             else:
                 var.pointer=numpy.zeros(1,dtype=var.type)
