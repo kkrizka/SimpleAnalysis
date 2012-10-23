@@ -4,13 +4,11 @@ import sys
 import os.path
 
 from ROOT import *
+
 from SimpleAnalysis import Analysis
-from SimpleAnalysis import VariableFactory
 from SimpleAnalysis import CommonAnalysis
-from SimpleAnalysis import VariablePlotterAnalysis
-from SimpleAnalysis import ScatterPlotterAnalysis
-from SimpleAnalysis import TrimAnalysis
-from SimpleAnalysis import VariableComparatorAnalysis
+from SimpleAnalysis import OutputFactory
+from SimpleAnalysis import VariableFactory
 
 import optparse
 
@@ -28,6 +26,8 @@ options_parser=optparse.OptionParser(usage=usage)
 
 options_parser.add_option("-n", "--nevents", dest="nevents", type="int",
                           help="Number of events to process per file.", metavar="NEVENTS")
+options_parser.add_option("-o", "--output", dest="output",
+                          help="Path to the results directory.", metavar="OUTPUT")
 
 (options, args) = options_parser.parse_args()
 
@@ -47,6 +47,9 @@ gROOT.SetStyle("Plain");
 gStyle.SetOptStat("");
 gStyle.SetPalette(1);
 TH1.StatOverflows(True)
+
+# Set the suffix for the OutputFactory, if required
+OutputFactory.setResults(options.output)
 
 # Add the script location to path to it can load it's own modules
 pypath=os.path.dirname(os.path.abspath(pyfile))

@@ -8,37 +8,27 @@ _name=None # Name where the results directory will be.
 _resultsdir=None # The path to the results directory, when created.
 _tfiles={} # A dictionary of opened TFiles. The key is the full path to the ROOT file.
 
-# Set the output name. Used by results() to determine the name of the results directory. Should never be called manually!
-def setOutputName(name):
-    global _name
-    _name=name
-
-# Returns a path to the results directory, and creates it if it does not exist alrealdy.
+# Returns a path to the results directory, and creates it if it does not
+# exist already.
 def results():
     global _name, _resultsdir
     if _resultsdir!=None:
         return _resultsdir
 
     # Create the directory structure
-    resultsdir=os.path.join(os.getcwd(), 'results')
-    if not os.path.isdir(resultsdir):
-        os.mkdir(resultsdir)
+    resultsdir=os.path.join(os.getcwd(), 'results',_name)
 
-    resultsdir=os.path.join(os.getcwd(), 'results', _name)
-    if not os.path.isdir(resultsdir):
-        os.mkdir(resultsdir)
-        
     now = datetime.datetime.now()
-    existing=glob.glob(os.path.join(resultsdir,'%d%02d%02d*'%(now.year,now.month,now.day)))
-    idx=len(existing)+1
+    existing=glob.glob(os.path.join(resultsdir,'%d%02d%02d-[0-9]*'%(now.year,now.month,now.day)))
+    idx="%03d"%(len(existing)+1)
     
-    resultsdir=os.path.join(resultsdir,'%d%02d%02d-%03d'%(now.year,now.month,now.day,idx))
-    os.mkdir(resultsdir)
+    resultsdir=os.path.join(resultsdir,'%d%02d%02d-%s'%(now.year,now.month,now.day,idx))
+
+    if not os.path.isdir(resultsdir):
+        os.makedirs(resultsdir)
 
     _resultsdir=resultsdir
 
-    # Register an exit function that closes all of the necessary files
-    atexit.register(cleanup)
     return _resultsdir
 
 # Returns a pointer to a TFile named "name" inside the results directory
@@ -54,6 +44,24 @@ def getTFile(name='output.root'):
     _tfiles[path]=f
     return f
 
+# Set the output name. Used by results() to determine the name of the
+# results directory. Should never be called manually!
+def setOutputName(name):
+    global _name
+    _name=name
+
+# Set the results directory. It is created if it does not exist. If set to
+# none, it is calculated automatically on the first call to results().
+# Should never be called manually!
+def setResults(resultsdir):
+    global _resultsdir
+    _resultsdir=resultsdir
+
+    if resultsdir==None: return
+    
+    if not os.path.isdir(_resultsdir):
+        os.makedirs(_resultsdir)
+
 # Closes all the stale file handles and prints out the output directory. This is called automatically by the code (if a results
 # directory was created). Should never be called manually!
 def cleanup():
@@ -64,3 +72,6 @@ def cleanup():
 
     if _resultsdir!=None:
         print 'Output stored inside %s'%_resultsdir
+
+# Register an exit function that closes all of the necessary files
+atexit.register(cleanup)
