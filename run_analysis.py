@@ -28,6 +28,8 @@ options_parser.add_option("-n", "--nevents", dest="nevents", type="int",
                           help="Number of events to process per file.", metavar="NEVENTS")
 options_parser.add_option("-o", "--output", dest="output",
                           help="Path to the results directory.", metavar="OUTPUT")
+options_parser.add_option("-i", "--input", dest="input",action="append",
+                          help="A list of event files to loop over.", metavar="OUTPUT")
 
 (options, args) = options_parser.parse_args()
 
@@ -60,4 +62,14 @@ execfile(pyfile) # Load the config file
 # Autoconfigure some parts of the analysis
 analysis.name=pyfile[:-3]
 analysis.nevents=options.nevents
+
+# Autoconfigure event files passed through the command line
+for input in options.input:
+    input_parts=input.split(':')
+    if len(input_parts)!=2:
+        print 'WARNING: Invalid input \'%s\''%input
+        continue
+    evset=Analysis.EventFile(input_parts[0],input_parts[1])
+    analysis.eventfiles.append(evset)
+
 analysis.run()
