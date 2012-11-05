@@ -64,6 +64,8 @@ analysis.name=pyfile[:-3]
 analysis.nevents=options.nevents
 
 # Autoconfigure event files passed through the command line
+if options.input==None: options.input=[]
+
 for input in options.input:
     input_parts=input.split(':')
     if len(input_parts)!=2:
