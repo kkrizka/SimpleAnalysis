@@ -222,8 +222,8 @@ class Analysis:
                 print " Event: %d                    "%events_processed
                 print "=============================="
 
-                event=Event(event)
-                VariableFactory.setEvent(event)
+                self.event=Event(event)
+                VariableFactory.setEvent(self.event)
                 # Check for cuts..
                 docut=False
                 for cut in self.cuts:
