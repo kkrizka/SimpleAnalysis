@@ -68,10 +68,12 @@ if options.input==None: options.input=[]
 
 for input in options.input:
     input_parts=input.split(':')
-    if len(input_parts)!=2:
+    if len(input_parts)<2:
         print 'WARNING: Invalid input \'%s\''%input
         continue
-    evset=Analysis.EventFile(input_parts[0],input_parts[1])
+    intree=input_parts.pop()
+    inpath=':'.join(input_parts)
+    evset=Analysis.EventFile(inpath,intree)
     analysis.eventfiles.append(evset)
 
 analysis.run()
