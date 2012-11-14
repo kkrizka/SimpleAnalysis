@@ -19,6 +19,8 @@ import inspect
 # If the attribute "stack" is set to False,  then the "nostack" option is used to
 # draw the histogams. It is set to True by default.
 #
+# If the attribute "logy" is set to True, then the y axis is made log scale.
+#
 # If a variable returns a list of numbers, all of them are added to a histogram
 # invididually. If a value is a touple, then the first entry is taken to be the 
 # value to fill the histogram and the second is the weight.
@@ -42,6 +44,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
         self.variables=[]
         self.norm_mode='none'
         self.stack=True
+        self.logy=False
 
     def init(self):
         # Book histograms for all the variables
@@ -115,6 +118,11 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 l=c.BuildLegend(.65,.65,.98,.95)
                 self.store(l)
                 l.Draw()
+
+            # Axis type
+            if self.logy:
+                c.SetLogy(True)
+                
             c.Update()
 
             # Print it out
