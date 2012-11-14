@@ -11,6 +11,7 @@ from SimpleAnalysis import OutputFactory
 from SimpleAnalysis import VariableFactory
 
 import optparse
+import tempfile
 
 ##
 # This is a general script to run the analysis on a set of simulated events.
@@ -30,6 +31,8 @@ options_parser.add_option("-o", "--output", dest="output",
                           help="Path to the results directory.", metavar="OUTPUT")
 options_parser.add_option("-i", "--input", dest="input",action="append",
                           help="A list of event files to loop over.", metavar="OUTPUT")
+options_parser.add_option("-t", "--test", dest="test", action="store_true",
+                          help="Test mode. Set results directory to /tmp and loop over only 10 events. Both can be overriden.", metavar="TEST")
 
 (options, args) = options_parser.parse_args()
 
@@ -49,6 +52,11 @@ gROOT.SetStyle("Plain");
 gStyle.SetOptStat("");
 gStyle.SetPalette(1);
 TH1.StatOverflows(True)
+
+if options.output==None and options.test:
+    options.output=tempfile.mkdtemp()
+if options.nevents==None and options.test:
+    options.nevents=10
 
 # Set the suffix for the OutputFactory, if required
 OutputFactory.setResults(options.output)
