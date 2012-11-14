@@ -185,7 +185,7 @@ class Analysis:
             self.eventfile=eventfile
 
             # Open the file
-            f=TFile(eventfile.path)
+            f=TFile.Open(eventfile.path)
             if f.FindKey(eventfile.treeName)==None:
                 print "ERROR: Tree not found!"
                 continue
