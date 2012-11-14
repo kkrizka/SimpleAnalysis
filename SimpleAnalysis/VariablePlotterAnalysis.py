@@ -19,6 +19,8 @@ import inspect
 # If the attribute "stack" is set to False,  then the "nostack" option is used to
 # draw the histogams. It is set to True by default.
 #
+# If the attribute "logy" is set to True, then the y axis is made log scale.
+#
 # If a variable returns a list of numbers, all of them are added to a histogram
 # invididually. If a value is a touple, then the first entry is taken to be the 
 # value to fill the histogram and the second is the weight.
@@ -28,11 +30,13 @@ import inspect
 #  units: The units to put after the title, in brackets. If not defined, then
 #         no units are added.
 #  nbins,minval,maxval: The binning to be used for the variable.
-#  xsec: The cross-section to scale each event by
 #
 # The EventFile's can have the following optional attributes:
-#  color: corresponds to the color that will be used to draw the histogram line.
-#  line: corresponds to the line style of the histogram
+#  title: The title to put into the legend.
+#  color: Corresponds to the color that will be used to draw the histogram line.
+#  line: Corresponds to the line style of the histogram
+#  fillcolor: Corresponds to the color that will be used to fill the histogram.
+#  xsec: The cross-section to scale each event by
 class VariablePlotterAnalysis(Analysis.Analysis):
     def __init__(self):
         Analysis.Analysis.__init__(self)
@@ -40,6 +44,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
         self.variables=[]
         self.norm_mode='none'
         self.stack=True
+        self.logy=False
 
     def init(self):
         # Book histograms for all the variables
@@ -61,6 +66,8 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 h.SetLineColor(self.eventfile.color)
             if hasattr(self.eventfile,'line'):
                 h.SetLineStyle(self.eventfile.line)
+            if hasattr(self.eventfile,'fillcolor'):
+                h.SetFillColor(self.eventfile.fillcolor)
             variable.histogram.Add(h)
             variable.current_histogram=h
 
@@ -111,12 +118,17 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 l=c.BuildLegend(.65,.65,.98,.95)
                 self.store(l)
                 l.Draw()
+
+            # Axis type
+            if self.logy:
+                c.SetLogy(True)
+                
             c.Update()
 
             # Print it out
             outfileName="%s-%s"%(self.name,variable.name)
             outfileName=outfileName.replace('/','-')
-            c.SaveAs("%s.eps"%outfileName)
+            c.SaveAs("%s.png"%outfileName)
 
             # Dump some stats, while we are there..
             print variable.title
