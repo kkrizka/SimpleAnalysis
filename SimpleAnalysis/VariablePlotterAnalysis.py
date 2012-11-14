@@ -28,11 +28,12 @@ import inspect
 #  units: The units to put after the title, in brackets. If not defined, then
 #         no units are added.
 #  nbins,minval,maxval: The binning to be used for the variable.
-#  xsec: The cross-section to scale each event by
 #
 # The EventFile's can have the following optional attributes:
-#  color: corresponds to the color that will be used to draw the histogram line.
-#  line: corresponds to the line style of the histogram
+#  title: The title to put into the legend.
+#  color: Corresponds to the color that will be used to draw the histogram line.
+#  line: Corresponds to the line style of the histogram
+#  xsec: The cross-section to scale each event by
 class VariablePlotterAnalysis(Analysis.Analysis):
     def __init__(self):
         Analysis.Analysis.__init__(self)
@@ -116,7 +117,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             # Print it out
             outfileName="%s-%s"%(self.name,variable.name)
             outfileName=outfileName.replace('/','-')
-            c.SaveAs("%s.eps"%outfileName)
+            c.SaveAs("%s.png"%outfileName)
 
             # Dump some stats, while we are there..
             print variable.title
