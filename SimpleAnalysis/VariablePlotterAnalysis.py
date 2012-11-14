@@ -100,7 +100,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
         for variable in self.variables:
             c=TCanvas(variable.name,variable.name)
             self.store(c)
-#            c.SetLogy(True)
+
             if self.stack:
                 variable.histogram.Draw()
             else:
@@ -121,6 +121,43 @@ class VariablePlotterAnalysis(Analysis.Analysis):
 
             # Axis type
             if self.logy:
+                # Figure out the best range to all of the events are seen on the log scale
+                hist=variable.histogram.GetHistogram()
+                binn=hist.GetNbinsX()
+                binvals=[]
+                for bin in range(binn):
+                    binvals.append(None)
+                
+                for hist in variable.histogram.GetHists():
+                    for bin in range(binn):
+                        val=hist.GetBinContent(bin+1)
+                        if val==0: continue # Only care about bins with something in it
+
+                        if binvals[bin]==None:
+                            binvals[bin]=val
+                            continue
+
+                        if self.stack:
+                            binvals[bin]+=val
+                        else:
+                            if val<binvals[bin]:
+                                binvals[bin]=val
+
+                minval=None
+                for bin in range(binn):
+                    val=binvals[bin]
+                    if val==None: continue
+                    
+                    if minval==None:
+                        minval=val
+                    else:
+                        if val<minval:
+                            minval=val
+                        
+                if minval!=None:
+                    variable.histogram.SetMinimum(minval)
+
+                # Set the log scale
                 c.SetLogy(True)
                 
             c.Update()
