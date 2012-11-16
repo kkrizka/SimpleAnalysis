@@ -1,6 +1,8 @@
 import Analysis
+import OutputFactory
 from ROOT import *
 import inspect
+
 
 # This is a general class to run the analysis on a set of simulated events.
 # The variables and cuts to be run are configured in the following section.
@@ -20,6 +22,9 @@ import inspect
 # draw the histogams. It is set to True by default.
 #
 # If the attribute "logy" is set to True, then the y axis is made log scale.
+#
+# The attribute "output_type" is the type of the output. It can be set to 'png',
+# 'eps' or 'root'.
 #
 # If a variable returns a list of numbers, all of them are added to a histogram
 # invididually. If a value is a touple, then the first entry is taken to be the 
@@ -45,6 +50,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
         self.norm_mode='none'
         self.stack=True
         self.logy=False
+        self.output_type='png'
 
     def init(self):
         # Book histograms for all the variables
@@ -165,7 +171,17 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             # Print it out
             outfileName="%s-%s"%(self.name,variable.name)
             outfileName=outfileName.replace('/','-')
-            c.SaveAs("%s.png"%outfileName)
+            if self.output_type=='png':
+                c.SaveAs("%s.png"%outfileName)
+            elif self.output_type=='eps':
+                c.SaveAs("%s.eps"%outfileName)
+            elif self.output_type=='root':
+                f=OutputFactory.getTFile()
+                f.cd()
+                variable.histogram.SetName(variable.name)
+                variable.histogram.Write()
+                
+                
 
             # Dump some stats, while we are there..
             print variable.title
