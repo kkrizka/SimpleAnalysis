@@ -227,7 +227,7 @@ class Analysis:
                 # Check for cuts..
                 docut=False
                 for cut in self.cuts:
-                    cut.event=event
+                    cut.event=self.event
                     if cut.cut()!=cut.invert:
                         docut=True
                         break
