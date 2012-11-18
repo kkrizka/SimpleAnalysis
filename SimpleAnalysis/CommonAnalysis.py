@@ -23,7 +23,7 @@ class VariableCut(Analysis.Cut):
         self.minVal=minVal
 
     ## Cut method
-    def cut(self,particles):
+    def cut(self):
         value=self.variable.value()
         if(value<self.minVal):
             return True
@@ -54,3 +54,12 @@ class Sum(Analysis.Variable):
         for variable in self.variables:
             value+=variable.value()
         return value
+
+## Returns a value from a branch
+class RawBranchVariable(Analysis.Variable):
+    def __init__(self,branch_name,type):
+        Analysis.Variable.__init_(self,branch_name,type)
+        self.branch_name=branch_name
+
+    def calculate(self):
+        return self.event.raw.__getattr__(self.branch_name)
