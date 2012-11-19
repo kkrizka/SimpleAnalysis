@@ -41,6 +41,7 @@ import inspect
 #  color: Corresponds to the color that will be used to draw the histogram line.
 #  line: Corresponds to the line style of the histogram
 #  fillcolor: Corresponds to the color that will be used to fill the histogram.
+#  options: Any drawing options that should be used when drawing this histogram
 #  xsec: The cross-section to scale each event by
 class VariablePlotterAnalysis(Analysis.Analysis):
     def __init__(self):
@@ -74,7 +75,11 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 h.SetLineStyle(self.eventfile.line)
             if hasattr(self.eventfile,'fillcolor'):
                 h.SetFillColor(self.eventfile.fillcolor)
-            variable.histogram.Add(h)
+            if hasattr(self.eventfile,'options'):
+                opt=self.eventfile.options
+            else:
+                opt=''
+            variable.histogram.Add(h,opt)
             variable.current_histogram=h
 
     def run_event(self):
