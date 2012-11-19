@@ -78,7 +78,9 @@ class VariablePlotterAnalysis(Analysis.Analysis):
             if hasattr(self.eventfile,'options'):
                 opt=self.eventfile.options
             else:
-                opt=''
+                opt='HIST'
+
+            h.Sumw2()
             variable.histogram.Add(h,opt)
             variable.current_histogram=h
 
