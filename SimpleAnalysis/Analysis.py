@@ -95,6 +95,8 @@ class Cut:
 ##
 ## Parameters stored by the Analysis class are:
 ##  eff - efficiency of cuts (available only after running analysis)
+##  fh - TFile object, when opened
+##  tree - The TTree being used
 ##  
 class EventFile:
     def __init__(self,path,treeName):
@@ -102,6 +104,9 @@ class EventFile:
         self.treeName=treeName
 
         self.eff=None
+
+        self.fh=None
+        self.tree=None
 
 ## This is a general class for an event. It is up to the reader classes (unimplemented)
 ## to define any specific variables. The original event from the ROOT tree is always
@@ -185,11 +190,11 @@ class Analysis:
             self.eventfile=eventfile
 
             # Open the file
-            f=TFile.Open(eventfile.path)
-            if f.FindKey(eventfile.treeName)==None:
+            eventfile.fh=TFile.Open(eventfile.path)
+            if eventfile.fh.FindKey(eventfile.treeName)==None:
                 print "ERROR: Tree not found!"
                 continue
-            t=f.Get(eventfile.treeName)
+            t=eventfile.fh.Get(eventfile.treeName)
             self.eventfile.tree=t
             
             gROOT.cd()
@@ -245,7 +250,7 @@ class Analysis:
             # Print out a summary
             print "Cut Efficiency: %d/%d = %f"%(events_passed,events_processed,(float(events_passed)/events_processed))
 
-            f.Close()
+            eventfile.fh.Close()
         self.deinit()
 
     # Helps to store stuff during the run of the analysis, so the things are
