@@ -35,6 +35,8 @@ class TreeMakerAnalysis(Analysis.Analysis):
                         var.pointer=std.vector('float')()
                     elif var.type[1]==int:
                         var.pointer=std.vector('int')()
+                    elif var.type[1]==bool:
+                        var.pointer=std.vector('bool')()
                     else:
                         var.pointer=std.vector(var.type[1].__name__)()
             else:
@@ -43,6 +45,9 @@ class TreeMakerAnalysis(Analysis.Analysis):
                     var.pointer=numpy.zeros(1,dtype=var.type)
                 elif var.type==int:
                     var.branch_type='%s/I'%var.name
+                    var.pointer=numpy.zeros(1,dtype=var.type)
+                elif var.type==bool:
+                    var.branch_type='%s/O'%var.name
                     var.pointer=numpy.zeros(1,dtype=var.type)
                 elif var.type==TVector3:
                     var.pointer=TVector3()
