@@ -111,8 +111,12 @@ class EventFile:
 ## This is a general class for an event. It is up to the reader classes (unimplemented)
 ## to define any specific variables. The original event from the ROOT tree is always
 ## accessible through the 'raw' attribute.
+## Attributes:
+##  raw: The raw entry in the TTree for direct access
+##  idx: The index inside the TTree of the currently processed event
 class Event:
     def __init__(self,raw):
+        self.idx=None
         self.raw=raw
 
 ## This is just a general class for doing analysis. It has the following
@@ -228,6 +232,7 @@ class Analysis:
                 print "=============================="
 
                 self.event=Event(event)
+                self.event.idx=events_processed
                 VariableFactory.setEvent(self.event)
                 # Check for cuts..
                 docut=False
