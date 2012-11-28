@@ -58,7 +58,7 @@ class Sum(Analysis.Variable):
 ## Returns a value from a branch
 class RawBranchVariable(Analysis.Variable):
     def __init__(self,branch_name,type):
-        Analysis.Variable.__init_(self,branch_name,type)
+        Analysis.Variable.__init__(self,branch_name,type)
         self.branch_name=branch_name
 
     def calculate(self):
