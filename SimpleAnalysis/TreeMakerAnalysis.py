@@ -51,6 +51,8 @@ class TreeMakerAnalysis(Analysis.Analysis):
                     var.pointer=numpy.zeros(1,dtype=var.type)
                 elif var.type==TVector3:
                     var.pointer=TVector3()
+                elif var.type==str:
+                    var.pointer=std.string()
 
         for var in self.variables:
             if var.branch_type!=None:
@@ -69,6 +71,8 @@ class TreeMakerAnalysis(Analysis.Analysis):
                 var.pointer.SetX(value.x())
                 var.pointer.SetY(value.y())
                 var.pointer.SetZ(value.z())
+            elif var.type==str:
+                var.pointer.replace(0,std.string.npos,value)
             else:
                 var.pointer[0]=value
                     
