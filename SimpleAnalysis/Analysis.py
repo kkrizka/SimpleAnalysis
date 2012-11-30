@@ -108,12 +108,28 @@ class EventFile:
         self.fh=None
         self.tree=None
 
+    # Load the tree from the file and store it into the tree member
+    # attribute. Set it to None if the tree is not found.
+    #
+    # Return: True if sucessful, false otherwise.
+    def load_tree(self):
+        self.fh=TFile.Open(self.path)
+        if self.fh.FindKey(self.treeName)==None:
+            return False
+        self.tree=self.fh.Get(self.treeName)
+        return True
+
+    # Close the file, and cleanup any extra stuff
+    def close(self):
+        self.fh.Close()
+
+
 ## This is a general class for an event. It is up to the reader classes (unimplemented)
 ## to define any specific variables. The original event from the ROOT tree is always
 ## accessible through the 'raw' attribute.
 ## Attributes:
 ##  raw: The raw entry in the TTree for direct access
-##  idx: The index inside the TTree of the currently processed event
+##  idx: The index inside the TTree of the currently processed eventp
 class Event:
     def __init__(self,raw):
         self.idx=None
@@ -194,12 +210,10 @@ class Analysis:
             self.eventfile=eventfile
 
             # Open the file
-            eventfile.fh=TFile.Open(eventfile.path)
-            if eventfile.fh.FindKey(eventfile.treeName)==None:
+            eventfile.load_tree()
+            if eventfile.tree==None:
                 print "ERROR: Tree not found!"
                 continue
-            t=eventfile.fh.Get(eventfile.treeName)
-            self.eventfile.tree=t
             
             gROOT.cd()
 
@@ -207,7 +221,7 @@ class Analysis:
 
             print "********************************************************************************"
             print "* Event File: %s   Event Tree: %s       "%(eventfile.path,eventfile.treeName)
-            print "* Number of Events: %d                  "%t.GetEntries()
+            print "* Number of Events: %d                  "%eventfile.tree.GetEntries()
             print "********************************************************************************"
 
             # Loop over every event
@@ -218,9 +232,9 @@ class Analysis:
             if(self.nevents!=None):
                 nEvents=self.nevents
             else:
-                nEvents=t.GetEntries()
+                nEvents=eventfile.tree.GetEntries()
 
-            for event in t:
+            for event in eventfile.tree:
                 events_processed+=1
 
                 if events_processed>nEvents:
@@ -255,7 +269,7 @@ class Analysis:
             # Print out a summary
             print "Cut Efficiency: %d/%d = %f"%(events_passed,events_processed,(float(events_passed)/events_processed))
 
-            eventfile.fh.Close()
+            eventfile.close()
         self.deinit()
 
     # Helps to store stuff during the run of the analysis, so the things are

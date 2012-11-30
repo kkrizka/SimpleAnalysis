@@ -1,10 +1,42 @@
 import Analysis
 
+from ROOT import *
+import tempfile
 from math import *
 
-### This file contains a few Variable/Cut classes that are common to many
+### This file contains a few Variable/Cut/EventFile classes that are common to many
 ### analysis chains.
 
+## Event Files ##
+
+## A event file where the tree is first pruned using a generic ROOT selection
+## via CopyTree.
+## Extra attributes:
+##  selection: The selection that will be used when pruning the tree
+##  fullTree: The complete, unpruned tree
+##  fh_tmp: The temporary ROOT file used to store the pruned tree
+class EventFileWithSelection(Analysis.EventFile):
+    def __init__(self,path,treeName,selection):
+        Analysis.EventFile.__init__(self,path,treeName)
+        self.selection=selection
+
+    def load_tree(self):
+        self.fh=TFile.Open(self.path)
+        if self.fh.FindKey(self.treeName)==None:
+            return False
+        self.fullTree=self.fh.Get(self.treeName)
+
+        # Need temporary storage for large trees
+        self.tmpdir=tempfile.mkdtemp()
+        self.fh_tmp=TFile('%s/tmp.root'%self.tmpdir,'RECREATE')
+        self.tree=self.fullTree.CopyTree(self.selection)
+        return True
+
+    def close(self):
+        self.fh.Close()
+        self.fh_tmp.Close()
+        
+        
 ### Cuts ###
 
 ## A generic cut that uses any variable and rejects events that have the
