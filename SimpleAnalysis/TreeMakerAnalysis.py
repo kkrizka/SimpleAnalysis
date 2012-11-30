@@ -37,6 +37,8 @@ class TreeMakerAnalysis(Analysis.Analysis):
                         var.pointer=std.vector('int')()
                     elif var.type[1]==bool:
                         var.pointer=std.vector('bool')()
+                    elif var.type[1]==str:
+                        var.pointer=std.vector('std::string')()
                     else:
                         var.pointer=std.vector(var.type[1].__name__)()
             else:
