@@ -61,6 +61,24 @@ class VariableCut(Analysis.Cut):
             return True
         return False
 
+## A generic cut that uses any variable and rejects events that have the
+## variable equal to zero.
+class VariableFlagCut(Analysis.Cut):
+    ## Arguments:
+    ## - variable: An Analysis.Variable object that cuts will be run on
+    ## - invert: Boolean indicating whether the cut should be inverted.
+    ##           Inverted cuts reject events with values not equal to zero.
+    ##           (Default: False)
+    def __init__(self,variable,invert=False):
+        Analysis.Cut.__init__(self,invert)
+        self.variable=variable
+
+    ## Cut method
+    def cut(self):
+        value=self.variable.value()
+        if value==0: return True
+        else: return False
+
 
 ### Variables ###
 ## Sum of different variables
