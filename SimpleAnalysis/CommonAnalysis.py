@@ -35,6 +35,22 @@ class EventFileWithSelection(Analysis.EventFile):
     def close(self):
         self.fh.Close()
         self.fh_tmp.Close()
+
+## A event file that is a TChain of ROOT files
+class EventFileChain(Analysis.EventFile):
+    def __init__(self,paths,treeName):
+        Analysis.EventFile.__init__(self,paths,treeName)
+
+    def load_tree(self):
+        self.tree=TChain(self.treeName)
+        
+        for path in self.path:
+            self.tree.Add(path)
+
+        return True
+
+    def close(self):
+        pass
         
         
 ### Cuts ###
