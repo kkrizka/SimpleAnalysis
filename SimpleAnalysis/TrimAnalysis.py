@@ -21,17 +21,13 @@ class TrimAnalysis(Analysis.Analysis):
 
     def init_eventfile(self):
         # Prepare the output stuff
-        self.outfile=TFile(self.eventfile.outFileName,"UPDATE")
+        self.outfile=TFile(self.eventfile.outFileName,"RECREATE")
         
-        # Delete any existing trees in the file, if exists
-        self.outfile.Delete("%s;*"%self.eventfile.outTreeName)
-        self.outfile.cd()
-
         # Create a new tree
         self.outtree=self.eventfile.tree.CloneTree(0)
         self.outtree.SetName(self.eventfile.outTreeName)
         self.outtree.SetTitle(self.eventfile.outTreeName)
-        self.eventfile.tree.CopyAddresses(self.outtree)
+        self.outtree.CopyAddresses(self.eventfile.tree)
 
     def run_event(self):
         self.outtree.Fill()
