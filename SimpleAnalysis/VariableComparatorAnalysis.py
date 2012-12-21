@@ -81,7 +81,6 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         hs=THStack()
 
         for hist in self.histograms:
-            hist.Scale(1/hist.Integral())
             hs.Add(hist)
 
         # Draw
