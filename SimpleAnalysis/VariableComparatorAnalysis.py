@@ -14,13 +14,19 @@ import inspect
 # invididually.  If a value is a touple, then the first entry is taken to be the
 # value to fill the histogram and the second is the weight.
 #
+# The following attributes can be set to control the logic of the analysis:
+#  title: The title to put on the x-axis
+#  units: The units to put on the x-axis of the plot. None means no units
+#  logy: Whether to log the y axis
+#  nbins: Number of bins in histogram
+#  minval: Minimum value in histogram
+#  maxval: Maximum value in histogram
+#
 # The following member attributes of each variable are used to configure its
 # appearance:
 #  color: The color use to draw it
 #  line: corresponds to the line style of the histogram
 #  title: The title to put in the legend for it
-#  units: The units to put on the x-axis of the plot. Only the first variable's
-#         value will be used
 #
 # Other member attributes are:
 #  histograms: List of histograms for each of the variable. The list has the same
@@ -31,6 +37,13 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         Analysis.Analysis.__init__(self)
 
         self.variables=[]
+        self.title=''
+        self.units=None
+        self.logy=False
+
+        self.nbins=100
+        self.minval=0
+        self.maxval=100
 
         self.histograms=[]
 
@@ -39,9 +52,9 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         for variable in self.variables:
             h=TH1F("%s_%d"%(variable.name,id(variable)),
                    variable.title,
-                   variable.nbins,
-                   variable.minval,
-                   variable.maxval)
+                   self.nbins,
+                   self.minval,
+                   self.maxval)
             if hasattr(variable,'color'):
                 h.SetLineColor(variable.color)
             if hasattr(variable,'line'):
@@ -73,9 +86,15 @@ class VariableComparatorAnalysis(Analysis.Analysis):
 
         # Draw
         c=TCanvas('c1','c1')
+        if self.logy:
+            c.SetLogy(True)
 
         hs.Draw('nostack')
-        hs.GetXaxis().SetTitle('(%s)'%self.variables[0].units)
+
+        title=self.title
+        if self.units!=None:
+            title+=' (%s)'%self.units
+        hs.GetXaxis().SetTitle(title)
 
         l=c.BuildLegend(.65,.65,.98,.95)
         l.Draw()
@@ -84,7 +103,7 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         # Print it out
         outfileName="%s"%(self.name)
         outfileName=outfileName.replace('/','-')
-        c.SaveAs("%s.eps"%outfileName)
+        c.SaveAs("%s.png"%outfileName)
 
         # Dump some stats, while we are there..
         print "Statistics:"
