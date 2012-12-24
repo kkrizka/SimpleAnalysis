@@ -40,7 +40,7 @@ def getTFile(name='output.root'):
     if path in _tfiles:
         return _tfiles[path]
 
-    f=TFile(path,'CREATE')
+    f=TFile(path,'RECREATE')
     _tfiles[path]=f
     return f
 
