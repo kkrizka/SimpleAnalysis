@@ -1,7 +1,7 @@
 import Analysis
 
 from ROOT import *
-import tempfile
+import tempfile, os
 from math import *
 
 ### This file contains a few Variable/Cut/EventFile classes that are common to many
@@ -35,6 +35,8 @@ class EventFileWithSelection(Analysis.EventFile):
     def close(self):
         self.fh.Close()
         self.fh_tmp.Close()
+        os.remove('%s/tmp.root'%self.tmpdir)
+
 
 ## A event file that is a TChain of ROOT files
 class EventFileChain(Analysis.EventFile):
