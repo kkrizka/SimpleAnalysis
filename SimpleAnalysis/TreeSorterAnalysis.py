@@ -34,6 +34,7 @@ class Destination:
         if self.fh!=None:
             self.fh.cd()
             self.tree.Write()
+            print self.filename,self.tree.GetEntries()
         
         
 class TreeSorterAnalysis(Analysis.Analysis):
