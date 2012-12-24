@@ -15,6 +15,7 @@ import inspect
 # value to fill the histogram and the second is the weight.
 #
 # The following attributes can be set to control the logic of the analysis:
+#  bigtitle: The title to put on the overall graph
 #  title: The title to put on the x-axis
 #  units: The units to put on the x-axis of the plot. None means no units
 #  logy: Whether to log the y axis
@@ -37,6 +38,7 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         Analysis.Analysis.__init__(self)
 
         self.variables=[]
+        self.bigtitle=''
         self.title=''
         self.units=None
         self.logy=False
@@ -79,6 +81,7 @@ class VariableComparatorAnalysis(Analysis.Analysis):
     def deinit(self):
         # Prepare stack
         hs=THStack()
+        hs.SetTitle(self.bigtitle)
 
         for hist in self.histograms:
             hs.Add(hist)
@@ -95,8 +98,9 @@ class VariableComparatorAnalysis(Analysis.Analysis):
             title+=' (%s)'%self.units
         hs.GetXaxis().SetTitle(title)
 
-        l=c.BuildLegend(.65,.65,.98,.95)
-        l.Draw()
+        if len(self.histograms)>1:
+            l=c.BuildLegend(.65,.65,.98,.95)
+            l.Draw()
         c.Update()
 
         # Print it out
