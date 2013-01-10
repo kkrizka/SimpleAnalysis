@@ -33,6 +33,8 @@ options_parser.add_option("-i", "--input", dest="input",action="append",
                           help="A list of event files to loop over.", metavar="OUTPUT")
 options_parser.add_option("-t", "--test", dest="test", action="store_true",
                           help="Test mode. Set results directory to /tmp and loop over only 10 events. Both can be overriden.", metavar="TEST")
+options_parser.add_option("-D", "", dest="define", action="append",
+                          help="Define some extra input parameters that can be parsed by analysis scripts.", metavar="KEY[=VALUE]")
 
 (options, args) = options_parser.parse_args()
 
@@ -57,6 +59,16 @@ if options.output==None and options.test:
     options.output=tempfile.mkdtemp()
 if options.nevents==None and options.test:
     options.nevents=10
+
+# Build a dictionary of defines
+defines={}
+if options.define!=None:
+    for define in options.define:
+        parts=define.split('=')
+        if len(parts)==1:
+            defines[parts[0]]=True
+        else:
+            defines[parts[0]]=parts[1]
 
 # Set the suffix for the OutputFactory, if required
 OutputFactory.setResults(options.output)
