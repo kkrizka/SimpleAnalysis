@@ -1,7 +1,7 @@
 import Analysis
 
 from ROOT import *
-import tempfile
+import tempfile, os
 from math import *
 
 ### This file contains a few Variable/Cut/EventFile classes that are common to many
@@ -35,6 +35,24 @@ class EventFileWithSelection(Analysis.EventFile):
     def close(self):
         self.fh.Close()
         self.fh_tmp.Close()
+        os.remove('%s/tmp.root'%self.tmpdir)
+
+
+## A event file that is a TChain of ROOT files
+class EventFileChain(Analysis.EventFile):
+    def __init__(self,paths,treeName):
+        Analysis.EventFile.__init__(self,paths,treeName)
+
+    def load_tree(self):
+        self.tree=TChain(self.treeName)
+        
+        for path in self.path:
+            self.tree.Add(path)
+
+        return True
+
+    def close(self):
+        pass
         
         
 ### Cuts ###
@@ -62,6 +80,26 @@ class VariableCut(Analysis.Cut):
         return False
 
 ## A generic cut that uses any variable and rejects events that have the
+## variable different from some value
+class VariableEqualCut(Analysis.Cut):
+    ## Arguments:
+    ## - variable: An Analysis.Variable object that cuts will be run on
+    ## - val: The value that we require to be equal
+    ## - invert: Boolean indicating whether the cut should be inverted.
+    ##           Inverted cuts reject events with values not equal to val.
+    ##           (Default: False)
+    def __init__(self,variable,val,invert=False):
+        Analysis.Cut.__init__(self,invert)
+        self.variable=variable
+        self.val=val
+
+    ## Cut method
+    def cut(self):
+        value=self.variable.value()
+        if value!=self.val: return True
+        else: return False
+
+## A generic cut that uses any variable and rejects events that have the
 ## variable equal to zero.
 class VariableFlagCut(Analysis.Cut):
     ## Arguments:
@@ -82,24 +120,12 @@ class VariableFlagCut(Analysis.Cut):
 
 ### Variables ###
 ## Sum of different variables
-class Sum(Analysis.Variable):
+class SumVariable(Analysis.Variable):
     def __init__(self,variables):
-        titles=[]
-        minval=0
-        maxval=0
-        for variable in variables:
-            titles.append(variable.title)
-            minval+=variable.minval
-            maxval+=variable.maxval
-        title=' + '.join(titles)
-        Analysis.Variable.__init__(self,title)
-        self.nbins=100
-        self.minval=minval
-        self.maxval=maxval
-
+        Analysis.Variable.__init__(self,'sum_%s'%str(variables),variables[0].type)
         self.variables=variables
         
-    def value(self):
+    def calculate(self):
         value=0
         for variable in self.variables:
             value+=variable.value()
