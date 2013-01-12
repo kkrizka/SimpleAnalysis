@@ -241,13 +241,13 @@ class Analysis:
                     events_processed=nEvents
                     break
                 
-                print "=============================="
-                print " Event: %d                    "%events_processed
-                print "=============================="
-
                 self.event=Event(event)
-                self.event.idx=events_processed
+                self.event.idx=(events_processed-1)
                 VariableFactory.setEvent(self.event)
+
+                print "=============================="
+                print " Event: %d                    "%self.event.idx
+                print "=============================="
                 # Check for cuts..
                 docut=False
                 for cut in self.cuts:
