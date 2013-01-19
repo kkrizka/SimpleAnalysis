@@ -276,3 +276,79 @@ class Analysis:
     # not being deleted.
     def store(self,var):
         self.store_list.append(var)
+
+## This is just a general class for running a script over many ROOT files. It has the following
+## functionality:
+## - Calls a function
+##   - Before anything is run (init)
+##   - Once for each event file (run_eventfile)
+##   - After everything is completed (deinit)
+##
+## Everything is run when the run() function is called.
+##
+## The following are some useful member parameters that are available to perform
+## analysis when each of the triggers are called.
+##  eventfile - The event file being processed
+##
+## Internal parameters that configure this class are:
+##  nevents - Causes the analysis to process only the first nevents events from
+##            each event file. Set to None to go over all of them. (None by 
+##            default)
+##  eventfiles - A list of EventFile objects that represent the event files
+##               to be looped over.
+class Script:
+    def __init__(self):
+        self.nevents=None
+        self.eventfiles=[]
+        self.cuts=[]
+
+        self.store_list=[]
+
+        self.event=None
+        self.eventfile=None
+
+    # Called before stuff is run
+    def init(self):
+        pass
+
+    # Called for each event file
+    def run_eventfile(self):
+        pass
+
+    # Called after stuff is done runnning
+    def deinit(self):
+        pass
+
+    # This takes care of running everything. After you setup the
+    # configuration of your analysis, run this!
+    def run(self):
+        OutputFactory.setOutputName(self.name)
+        self.init()
+
+        for eventfile in self.eventfiles:
+            VariableFactory.setEventFile(eventfile)
+            VariableFactory.setEvent(None)
+            self.eventfile=eventfile
+
+            # Open the file
+            eventfile.load_tree()
+            if eventfile.tree==None:
+                print "ERROR: Tree not found!"
+                continue
+            
+            gROOT.cd()
+
+            print "********************************************************************************"
+            print "* Event File: %s   Event Tree: %s       "%(eventfile.path,eventfile.treeName)
+            print "* Number of Events: %d                  "%eventfile.tree.GetEntries()
+            print "********************************************************************************"
+            self.run_eventfile()
+                        
+            eventfile.close()
+
+        self.deinit()
+
+    # Helps to store stuff during the run of the analysis, so the things are
+    # not being deleted.
+    def store(self,var):
+        self.store_list.append(var)
