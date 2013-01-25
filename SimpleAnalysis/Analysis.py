@@ -4,8 +4,16 @@ import VariableFactory
 import OutputFactory
 
 ##
-# This is a general class for calculating a variable for an event. It also stores
+# This is a general class for calculating a variable for an event. It can also store
 # the aesthetic information that will be used when plotting.
+#
+# It is also possible to define a variable weight, through the weight attribute. This
+# weight is then added to the returned value by formatting it as a tuple. The weight
+# is another variable that returns either a single value or a list. In the case of a
+# single value, the same weight is set for all of the values returned by a variable. If
+# it is a list, then the index of the weight list is matched to the index of the value
+# list. It is possible to override this weight by having the variable return a tuple
+# itself.
 #
 # Variable values can be automatically cached, which is useful if they are used 
 # several times at different parts of the analysis. Only the last value is cached 
@@ -15,6 +23,9 @@ import OutputFactory
 # - name: The name of the variable. Taken to be the class name by default
 # - type: The type of the variable. Taken to be float by default.
 #
+# The following attributes are optional:
+# - weight: A Variable object that returns the weight for the event.
+#
 # Each calculation has the access to the following attributes
 # - event: Entry in the TTree currently being processed
 # - eventfile: Information about the event file being processed
@@ -22,16 +33,14 @@ class Variable:
     # Arguments:
     # - name: The name that will be used to identify this variable
     #         throughout the execution and outputs
-    def __init__(self,name=None,type=None):
+    def __init__(self,name=None,type=float):
         if name==None:
             self.name=self.__class__.__name__
         else:
             self.name=name
 
-        if type==None:
-            self.type=float
-        else:
-            self.type=type
+        self.type=type
+        self.weight=None
 
         # setup the cache
         self.cached_value=None
@@ -47,6 +56,21 @@ class Variable:
         if self.dirty_bit:
             self.cached_value=self.calculate()
             self.dirty_bit=False
+
+            # Apply weighting, if necessary
+            if self.weight!=None and self.cached_value!=None:
+                weights=self.weight.value()
+                if type(self.cached_value)==list: # Apply weight item-by-item
+                    for idx in range(len(self.cached_value)):
+                        if type(self.cached_value[i])!=tuple: # No weight applied yet
+                            if type(weights)==list:
+                                self.cached_value[i]=(self.cached_value[i],weights[i])
+                            else:
+                                self.cached_value[i]=(self.cached_value[i],weights)
+                else:
+                    if type(self.cached_value)!=tuple: # No weight applied yet
+                        self.cached_value=(self.cached_value,weights)
+            
             
         return self.cached_value;
 
