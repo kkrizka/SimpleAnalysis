@@ -11,8 +11,8 @@ import inspect
 # stored in the same histogram.
 #
 # If a variable returns a list of numbers, all of them are added to a histogram
-# invididually.  If a value is a touple, then the first entry is taken to be the
-# value to fill the histogram and the second is the weight.
+# invididually. If a variable has the weight attribute, which should be another
+# Variable object, its value is used as a weight.
 #
 # The following attributes can be set to control the logic of the analysis:
 #  bigtitle: The title to put on the overall graph
@@ -28,6 +28,7 @@ import inspect
 #  color: The color use to draw it
 #  line: corresponds to the line style of the histogram
 #  title: The title to put in the legend for it
+#  weigth: The weight to use while filling (optional, should be another Variable object)
 #
 # Other member attributes are:
 #  histograms: List of histograms for each of the variable. The list has the same
@@ -67,10 +68,14 @@ class VariableComparatorAnalysis(Analysis.Analysis):
     def run_event(self):
         for i in range(0,len(self.variables)):
             variable=self.variables[i]
+
+            # Get the value to fill the histogram with
             values=variable.value()
+            if values==None: continue # Do not fill if no value returned
             if type(values)!=list:
                 values=[values]
 
+            # Fill the histogram
             h=self.histograms[i]
             for value in values:
                 if type(value)==tuple:
