@@ -5,6 +5,7 @@ _eventfile=None
 _eventID=None
 
 def setEvent(event):
+    global _event
     _event=event
     for key in _cache:
         _cache[key].event=event
@@ -12,6 +13,7 @@ def setEvent(event):
 
 
 def setEventFile(eventfile):
+    global _eventfile
     _eventfile=eventfile
     for key in _cache:
         _cache[key].eventfile=eventfile
