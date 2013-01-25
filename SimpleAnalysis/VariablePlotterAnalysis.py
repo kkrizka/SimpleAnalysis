@@ -26,6 +26,8 @@ import inspect
 # The attribute "output_type" is the type of the output. It can be set to 'png',
 # 'eps' or 'root'.
 #
+# The attribute "bigtitle" is used as the title for the histogram.
+#
 # If a variable returns a list of numbers, all of them are added to a histogram
 # invididually. If a value is a touple, then the first entry is taken to be the 
 # value to fill the histogram and the second is the weight.
@@ -48,6 +50,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
         Analysis.Analysis.__init__(self)
 
         self.variables=[]
+        self.bigtitle=''
         self.norm_mode='none'
         self.stack=True
         self.logy=False
@@ -125,6 +128,9 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 title+=' (%s)'%variable.units
             variable.histogram.GetXaxis().SetTitle(title)
 
+            # Set the big title
+            variable.histogram.SetTitle(self.bigtitle)
+
             # Add a legend, if necessary
             if variable.histogram.GetHists().GetSize()>1: # Only bother with legend if have more
                                                           # than one event file
@@ -187,8 +193,6 @@ class VariablePlotterAnalysis(Analysis.Analysis):
                 f.cd()
                 variable.histogram.SetName(variable.name)
                 variable.histogram.Write()
-                
-                
 
             # Dump some stats, while we are there..
             print variable.title
