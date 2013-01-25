@@ -90,6 +90,7 @@ class VariablePlotterAnalysis(Analysis.Analysis):
     def run_event(self):
         for variable in self.variables:
             values=variable.value()
+            if values==None: continue
             if type(values)!=list:
                 values=[values]
                 
