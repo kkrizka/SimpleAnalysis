@@ -60,13 +60,15 @@ class Variable:
             # Apply weighting, if necessary
             if self.weight!=None and self.cached_value!=None:
                 weights=self.weight.value()
+                is_weights_list=(type(weights)==list)
                 if type(self.cached_value)==list: # Apply weight item-by-item
                     for idx in range(len(self.cached_value)):
-                        if type(self.cached_value[idx])!=tuple: # No weight applied yet
-                            if type(weights)==list:
-                                self.cached_value[idx]=(self.cached_value[idx],weights[idx])
+                        cached_value=self.cached_value[idx]
+                        if type(cached_value)!=tuple: # No weight applied yet
+                            if is_weights_list:
+                                self.cached_value[idx]=(cached_value,weights[idx])
                             else:
-                                self.cached_value[idx]=(self.cached_value[idx],weights)
+                                self.cached_value[idx]=(cached_value,weights)
                 else:
                     if type(self.cached_value)!=tuple: # No weight applied yet
                         self.cached_value=(self.cached_value,weights)
