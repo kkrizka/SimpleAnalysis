@@ -119,6 +119,16 @@ class VariableFlagCut(Analysis.Cut):
 
 
 ### Variables ###
+## Returns a constant value
+class ConstantVariable(Analysis.Variable):
+    def __init__(self,x,type=float):
+        Analysis.Variable.__init__(self,'constant_%s'%str(x),type)
+        self.x=x
+        
+    def calculate(self):
+        return self.x
+
+        
 ## Sum of different variables
 class SumVariable(Analysis.Variable):
     def __init__(self,variables):
