@@ -146,9 +146,11 @@ class RawBranchVariable(Analysis.Variable):
     def __init__(self,branch_name,type):
         Analysis.Variable.__init__(self,branch_name,type)
         self.branch_name=branch_name
-
+        
     def calculate(self):
         if type(self.type)==tuple and self.type[0]==list:
             return list(self.event.raw.__getattr__(self.branch_name))
+        elif self.type==str:
+            return str(self.event.raw.__getattr__(self.branch_name))
         else:
             return self.event.raw.__getattr__(self.branch_name)
