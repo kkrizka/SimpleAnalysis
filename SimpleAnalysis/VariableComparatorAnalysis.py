@@ -1,4 +1,6 @@
 import Analysis
+import OutputFactory
+
 from ROOT import *
 import inspect
 
@@ -11,11 +13,15 @@ import inspect
 # stored in the same histogram.
 #
 # If a variable returns a list of numbers, all of them are added to a histogram
-# invididually. If a variable has the weight attribute, which should be another
-# Variable object, its value is used as a weight.
+# invididually.
 #
 # The following attributes can be set to control the logic of the analysis:
 #  bigtitle: The title to put on the overall graph
+#  norm_mode: The normalization mode ('1' or 'none') for the different histograms.
+#  output_type: Type of output ('png', 'eps' or 'root')
+#  hsname: Name for the stacked histogram that will be saved if output_type=='root'
+#
+# Axis relevant variables:
 #  title: The title to put on the x-axis
 #  units: The units to put on the x-axis of the plot. None means no units
 #  logy: Whether to log the y axis
@@ -28,7 +34,6 @@ import inspect
 #  color: The color use to draw it
 #  line: corresponds to the line style of the histogram
 #  title: The title to put in the legend for it
-#  weigth: The weight to use while filling (optional, should be another Variable object)
 #
 # Other member attributes are:
 #  histograms: List of histograms for each of the variable. The list has the same
@@ -40,10 +45,14 @@ class VariableComparatorAnalysis(Analysis.Analysis):
 
         self.variables=[]
         self.bigtitle=''
+        self.norm_mode='none'
+        self.output_type='png'
+        self.hsname=None
+
+        
         self.title=''
         self.units=None
         self.logy=False
-
         self.nbins=100
         self.minval=0
         self.maxval=100
@@ -87,8 +96,12 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         # Prepare stack
         hs=THStack()
         hs.SetTitle(self.bigtitle)
+        if self.hsname!=None:
+            hs.SetName(self.hsname)
 
         for hist in self.histograms:
+            if self.norm_mode=='1' and hist.Integral()!=0:
+                hist.Scale(1./hist.Integral())
             hs.Add(hist)
 
         # Draw
@@ -111,7 +124,14 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         # Print it out
         outfileName="%s"%(self.name)
         outfileName=outfileName.replace('/','-')
-        c.SaveAs("%s.png"%outfileName)
+        if self.output_type=='png':
+            c.SaveAs("%s.png"%outfileName)
+        elif self.output_type=='eps':
+            c.SaveAs("%s.eps"%outfileName)
+        elif self.output_type=='root':
+            f=OutputFactory.getTFile()
+            f.cd()
+            hs.Write()
 
         # Dump some stats, while we are there..
         print "Statistics:"
