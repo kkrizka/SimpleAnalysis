@@ -147,12 +147,17 @@ class EventFile:
 
     # Close the file, and cleanup any extra stuff
     def close(self):
-        self.fh.Close()
+        self.fh.Close()    
 
 
 ## This is a general class for an event. It is up to the reader classes (unimplemented)
 ## to define any specific variables. The original event from the ROOT tree is always
 ## accessible through the 'raw' attribute.
+##
+## All of the branches of the tree are disabled by default, for performance reasons.
+## Accessing them through the corresponding attribute of the Event object (ie: event.pt
+## to get branch pt) enables them automatically.
+##
 ## Attributes:
 ##  raw: The raw entry in the TTree for direct access
 ##  idx: The index inside the TTree of the currently processed eventp
@@ -160,6 +165,23 @@ class Event:
     def __init__(self,raw):
         self.idx=None
         self.raw=raw
+        self.branch_cache={}
+
+    # Returns a pointer to the requested branch
+    def __getattr__(self,attr):
+        if attr in self.branch_cache:
+            return self.branch_cache[attr]
+        
+        if hasattr(self.raw,attr):
+            if self.raw.GetBranchStatus(attr)==0:
+                branch=self.raw.GetBranch(attr)
+                branch.SetStatus(1)
+                branch.GetEntry(self.idx)
+            self.branch_cache[attr]=self.raw.__getattr__(attr)
+            return self.branch_cache[attr]
+
+        raise AttributeError('%r object has no attribute %r'%(type(self),attr))
+
 
 ## This is just a general class for doing analysis. It has the following
 ## functionality:
@@ -240,6 +262,10 @@ class Analysis:
             if eventfile.tree==None:
                 print "ERROR: Tree not found!"
                 continue
+            if eventfile.tree.GetEntries()==0:
+                print 'ERROR: Tree has no entries!'
+                continue
+            eventfile.tree.SetBranchStatus("*",0)
             
             gROOT.cd()
 
@@ -260,15 +286,16 @@ class Analysis:
             else:
                 nEvents=eventfile.tree.GetEntries()
 
-            for event in eventfile.tree:
+            for evt_idx in range(eventfile.tree.GetEntries()):
                 events_processed+=1
 
                 if events_processed>nEvents:
                     events_processed=nEvents
                     break
-                
-                self.event=Event(event)
-                self.event.idx=(events_processed-1)
+
+                eventfile.tree.GetEntry(evt_idx)
+                self.event=Event(eventfile.tree)
+                self.event.idx=evt_idx
                 VariableFactory.setEvent(self.event)
 
                 print "=============================="
