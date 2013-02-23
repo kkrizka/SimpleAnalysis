@@ -149,8 +149,8 @@ class RawBranchVariable(Analysis.Variable):
         
     def calculate(self):
         if type(self.type)==tuple and self.type[0]==list:
-            return list(self.event.raw.__getattr__(self.branch_name))
+            return list(self.event.__getattr__(self.branch_name))
         elif self.type==str:
-            return str(self.event.raw.__getattr__(self.branch_name))
+            return str(self.event.__getattr__(self.branch_name))
         else:
-            return self.event.raw.__getattr__(self.branch_name)
+            return self.event.__getattr__(self.branch_name)
