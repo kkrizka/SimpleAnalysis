@@ -14,7 +14,7 @@ class TreeCopyAnalysis(Analysis.Analysis):
 
         self.fh=None
         self.tree=None
-        
+
     def init_eventfile(self):
         if hasattr(self.eventfile,'output'):
             self.fh=OutputFactory.getTFile(self.eventfile.output)
@@ -22,6 +22,7 @@ class TreeCopyAnalysis(Analysis.Analysis):
             self.fh=OutputFactory.getTFile()
 
         # Create the output tree
+        self.eventfile.tree.SetBranchStatus('*',1)
         self.tree=self.eventfile.tree.CloneTree(0)
         self.eventfile.tree.CopyAddresses(self.tree)
 
