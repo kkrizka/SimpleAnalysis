@@ -2,6 +2,7 @@ from ROOT import *
 
 import VariableFactory
 import OutputFactory
+import Timing
 
 ##
 # This is a general class for calculating a variable for an event. It can also store
@@ -72,7 +73,6 @@ class Variable:
                 else:
                     if type(self.cached_value)!=tuple: # No weight applied yet
                         self.cached_value=(self.cached_value,weights)
-            
             
         return self.cached_value;
 
@@ -171,11 +171,18 @@ class Event:
     def __getattr__(self,attr):
         if attr in self.branch_cache:
             return self.branch_cache[attr]
-        
-        if hasattr(self.raw,attr):
+
+        if self.raw.FindBranch(attr):
             if self.raw.GetBranchStatus(attr)==0:
                 branch=self.raw.GetBranch(attr)
-                branch.SetStatus(1)
+
+                # Set status
+                self.raw.SetBranchStatus(attr,1)
+                if branch.GetListOfBranches().GetEntries()>0:
+                    branch.GetListOfBranches().At(0).GetName()
+                    self.raw.SetBranchStatus(attr+'.*',1) # subbranches
+
+                # Update the values
                 branch.GetEntry(self.idx)
             self.branch_cache[attr]=self.raw.__getattr__(attr)
             return self.branch_cache[attr]
@@ -249,6 +256,8 @@ class Analysis:
         OutputFactory.setOutputName(self.name)
         self.init()
 
+        timing=Timing.Timing()
+
         for eventfile in self.eventfiles:
             VariableFactory.setEventFile(eventfile)
             VariableFactory.setEvent(None)
@@ -315,7 +324,10 @@ class Analysis:
                     events_passed+=1
                 print ""
 
+                ## Run the user code
+                timing.start()
                 self.run_event()
+                timing.end()
 
             eventfile.eff=1.0*events_passed/events_processed
             self.deinit_eventfile()
@@ -324,7 +336,9 @@ class Analysis:
 
             eventfile.close()
         self.deinit()
-
+        print '== End Statistics =='
+        print 'Average Time Per Event: %s'%str(timing.average())
+            
     # Helps to store stuff during the run of the analysis, so the things are
     # not being deleted.
     def store(self,var):
