@@ -10,7 +10,10 @@ from ROOT import *
 # The supported variable types right now are int, float, std::vector<int> and
 # std::vector<float>.
 #
-# The variables to be calculated should be set in the member attribute 'variables'
+# The variables to be calculated should be set in the member attribute 'variables'.
+#
+# The name of the branch is taken to the variable name. However this can be overridden
+# by setting the branchname attribute for the variable.
 class TreeMakerAnalysis(Analysis.Analysis):
     def __init__(self):
         Analysis.Analysis.__init__(self)
@@ -57,10 +60,14 @@ class TreeMakerAnalysis(Analysis.Analysis):
                     var.pointer=std.string()
 
         for var in self.variables:
-            if var.branch_type!=None:
-                self.tree.Branch(var.name,var.pointer,var.branch_type)
+            if hasattr(var,'branchname'):
+                name=var.branchname
             else:
-                self.tree.Branch(var.name,var.pointer)
+                name=var.name
+            if var.branch_type!=None:
+                self.tree.Branch(name,var.pointer,var.branch_type)
+            else:
+                self.tree.Branch(name,var.pointer)
 
     def run_event(self):
         for var in self.variables:
