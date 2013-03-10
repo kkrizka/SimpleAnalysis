@@ -19,7 +19,6 @@ import inspect
 #  bigtitle: The title to put on the overall graph
 #  norm_mode: The normalization mode ('1' or 'none') for the different histograms.
 #  output_type: Type of output ('png', 'eps' or 'root')
-#  hsname: Name for the stacked histogram that will be saved if output_type=='root'
 #
 # Axis relevant variables:
 #  title: The title to put on the x-axis
@@ -47,7 +46,6 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         self.bigtitle=''
         self.norm_mode='none'
         self.output_type='png'
-        self.hsname=None
 
         
         self.title=''
@@ -96,8 +94,7 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         # Prepare stack
         hs=THStack()
         hs.SetTitle(self.bigtitle)
-        if self.hsname!=None:
-            hs.SetName(self.hsname)
+        hs.SetName(self.name)
 
         for hist in self.histograms:
             if self.norm_mode=='1' and hist.Integral()!=0:
