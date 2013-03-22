@@ -2,6 +2,7 @@ from ROOT import *
 
 import VariableFactory
 import OutputFactory
+import PointerFactory
 import Timing
 
 ##
@@ -162,6 +163,8 @@ class EventFile:
 ##  raw: The raw entry in the TTree for direct access
 ##  idx: The index inside the TTree of the currently processed eventp
 class Event:
+    branch_pointers={}
+    branch_type={}
     def __init__(self,raw):
         self.idx=None
         self.raw=raw
@@ -169,9 +172,12 @@ class Event:
 
     # Returns a pointer to the requested branch
     def __getattr__(self,attr):
-        if attr in self.branch_cache:
+        if attr in self.branch_pointers: # Check pointer for this branch
+            return self.pointer_value(attr)
+        if attr in self.branch_cache: # Check if has already been calculated
             return self.branch_cache[attr]
 
+        # Not cached, so update the information
         if self.raw.FindBranch(attr):
             if self.raw.GetBranchStatus(attr)==0:
                 branch=self.raw.GetBranch(attr)
@@ -179,15 +185,49 @@ class Event:
                 # Set status
                 self.raw.SetBranchStatus(attr,1)
                 if branch.GetListOfBranches().GetEntries()>0:
-                    branch.GetListOfBranches().At(0).GetName()
                     self.raw.SetBranchStatus(attr+'.*',1) # subbranches
+
+                # Create a pointer, is possible
+                if attr not in Event.branch_type: # will be set to None if pointer creation was attempted earlier, but failed
+                    (pointer,thetype)=self.create_pointer(attr)
+                    if pointer!=None:
+                        Event.branch_pointers[attr]=pointer
+                        Event.branch_type[attr]=thetype
+                        self.raw.SetBranchAddress(attr,pointer)
+                    else:
+                        Event.branch_type[attr]=None
 
                 # Update the values
                 branch.GetEntry(self.idx)
-            self.branch_cache[attr]=self.raw.__getattr__(attr)
-            return self.branch_cache[attr]
+            if attr in Event.branch_pointers:
+                return self.pointer_value(attr)
+            else:
+                self.branch_cache[attr]=self.raw.__getattr__(attr)
+                return self.branch_cache[attr]
 
         raise AttributeError('%r object has no attribute %r'%(type(self),attr))
+
+    def create_pointer(self,branch_name):
+        branch=self.raw.GetBranch(branch_name)
+        branch.GetEntry(0) # Need to make sure that it is set to something
+
+        # Determine type by obtaining the value the python way
+        raw_attr=self.raw.__getattr__(branch_name)
+        thetype=type(raw_attr)
+        pointer=PointerFactory.get(thetype)
+        if pointer!=None: # Make sure that this is a supported pointer type
+            return (pointer,thetype)            
+        return (None,None)
+
+    def pointer_value(self,branch_name):
+        if Event.branch_type[branch_name]==int:
+            return int(Event.branch_pointers[branch_name][0])
+        elif Event.branch_type[branch_name]==float:
+            return float(Event.branch_pointers[branch_name][0])
+        elif Event.branch_type[branch_name]==bool:
+            return bool(Event.branch_pointers[branch_name][0])
+        else:
+            return Event.branch_pointers[branch_name]
 
 
 ## This is just a general class for doing analysis. It has the following
@@ -303,6 +343,7 @@ class Analysis:
                     break
 
                 eventfile.tree.GetEntry(evt_idx)
+                
                 self.event=Event(eventfile.tree)
                 self.event.idx=evt_idx
                 VariableFactory.setEvent(self.event)
