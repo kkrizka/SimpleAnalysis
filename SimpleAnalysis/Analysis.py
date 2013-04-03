@@ -172,7 +172,7 @@ class Event:
 
     # Returns a pointer to the requested branch
     def __getattr__(self,attr):
-        if attr in self.branch_pointers: # Check pointer for this branch
+        if attr in Event.branch_pointers: # Check pointer for this branch
             return self.pointer_value(attr)
         if attr in self.branch_cache: # Check if has already been calculated
             return self.branch_cache[attr]
@@ -317,6 +317,10 @@ class Analysis:
             eventfile.tree.SetBranchStatus("*",0)
             
             gROOT.cd()
+
+            # Clear the branch pointers in an event
+            Event.branch_pointers={}
+            Event.branch_type={}
 
             self.init_eventfile()
 
