@@ -1,6 +1,6 @@
 from SimpleAnalysis import Analysis
 from SimpleAnalysis import OutputFactory
-import numpy
+
 from ROOT import *
 
 # A simple analysis class that copies the branches from an input TTree and stores
