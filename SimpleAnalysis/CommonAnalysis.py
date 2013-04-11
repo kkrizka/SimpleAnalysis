@@ -141,9 +141,46 @@ class SumVariable(Analysis.Variable):
             value+=variable.value()
         return value
 
+## Product of different variables
+# All must be of the same type
+# If type is list, product is taken element wise
+class ProductVariable(Analysis.Variable):
+    def __init__(self,variables):
+        # Determine type by looking at the first type, then check if it will become a list at some time later
+        t=variables[0].type
+        for variable in variables:
+            if type(variable.type)==tuple:
+                t=variable.type
+                
+        Analysis.Variable.__init__(self,'product_%s'%str(variables),t)
+        self.variables=variables
+        
+    def calculate(self):
+        value=1
+        for variable in self.variables:
+            value=self.multiply(value,variable.value())
+        return value
+
+
+    def multiply(self,value1,value2):
+        if type(value1)!=list and type(value2)!=list:
+            return value1*value2
+        if type(value1)!=list and type(value2)==list:
+            for i in range(len(value2)):
+                value2[i]*=value1
+            return value2
+        if type(value1)==list and type(value2)!=list:
+            for i in range(len(value1)):
+                value1[i]*=value2
+            return value1
+        if type(value1)==list and type(value2)==list:
+            for i in range(len(value1)):
+                value1[i]*=value2[i]
+            return value1
+
 ## Returns a value from a branch
 class RawBranchVariable(Analysis.Variable):
-    def __init__(self,branch_name,type):
+    def __init__(self,branch_name,type=float):
         Analysis.Variable.__init__(self,branch_name,type)
         self.branch_name=branch_name
         
