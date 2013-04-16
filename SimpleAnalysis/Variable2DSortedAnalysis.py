@@ -56,9 +56,10 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
 
     def init(self):
         # Book histograms for all the variables
-        for var1 in self.variables:
-            for var2 in self.variables:
-                if var1==var2: continue
+        for i1 in range(len(self.variables)-1):
+            var1=self.variables[i1]
+            for i2 in range(i1+1,len(self.variables)):
+                var2=self.variables[i2]
                 for category in self.categories:
                     self.book_category(category,var1,var2)
 
@@ -69,7 +70,7 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         bigtitle=''
         if self.bigtitle!=None: bigtitle=' and %s'%self.bigtitle
 
-        h=TH2F("%svs%s_%s%s"%(var1.name,var2.name,category.name,suffix),
+        h=TH2F("%s_%svs%s%s"%(category.name,var1.name,var2.name,suffix),
                '%s%s'%(category.title,bigtitle),
                var1.nbins,
                var1.minval,
