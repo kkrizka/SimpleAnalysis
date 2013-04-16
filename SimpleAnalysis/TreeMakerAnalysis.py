@@ -31,6 +31,9 @@ class TreeMakerAnalysis(Analysis.Analysis):
         self.tree=TTree('tree','tree')
         
         for var in self.variables:
+            if not hasattr(var,'branchname'):
+                var.branchname=var.name
+
             var.branch_type=None
             if type(var.type)==tuple:
                 if var.type[0]==list:
@@ -46,13 +49,13 @@ class TreeMakerAnalysis(Analysis.Analysis):
                         var.pointer=std.vector(var.type[1].__name__)()
             else:
                 if var.type==float:
-                    var.branch_type='%s/D'%var.name
+                    var.branch_type='%s/D'%var.branchname
                     var.pointer=numpy.zeros(1,dtype=var.type)
                 elif var.type==int:
-                    var.branch_type='%s/I'%var.name
+                    var.branch_type='%s/I'%var.branchname
                     var.pointer=numpy.zeros(1,dtype=var.type)
                 elif var.type==bool:
-                    var.branch_type='%s/O'%var.name
+                    var.branch_type='%s/O'%var.branchname
                     var.pointer=numpy.zeros(1,dtype=var.type)
                 elif var.type==TVector3:
                     var.pointer=TVector3()
@@ -60,14 +63,10 @@ class TreeMakerAnalysis(Analysis.Analysis):
                     var.pointer=std.string()
 
         for var in self.variables:
-            if hasattr(var,'branchname'):
-                name=var.branchname
-            else:
-                name=var.name
             if var.branch_type!=None:
-                self.tree.Branch(name,var.pointer,var.branch_type)
+                self.tree.Branch(var.branchname,var.pointer,var.branch_type)
             else:
-                self.tree.Branch(name,var.pointer)
+                self.tree.Branch(var.branchname,var.pointer)
 
     def run_event(self):
         for var in self.variables:
