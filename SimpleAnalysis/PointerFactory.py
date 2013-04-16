@@ -22,5 +22,5 @@ def get_typecode(type):
     if type==int or type==bool:
         return 'i'
     elif type==float:
-        return 'f'
+        return 'd'
     return None
