@@ -25,6 +25,7 @@ from ROOT import *
 #  output_type: Type of output ('png', 'eps' or 'root')
 #  norm_mode: How to normalize individual histograms ('none' or '1')
 #  logy: Whether to log the y axis
+#  stack: Whether to stack the histograms (True by default)
 #
 # For Variable objects, the following attributes should be set to configure the
 # x-axis:
@@ -46,6 +47,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
         self.norm_mode='none'        
         self.output_type='png'
         self.logy=False
+        self.stack=True
 
     def init(self):
         # Book histograms for all the variables
@@ -111,8 +113,12 @@ class VariableSortedAnalysis(Analysis.Analysis):
             if self.norm_mode=='1':
                 for h in variable.hist.GetHists():
                     if h.Integral()!=0: h.Scale(1./h.Integral())
-            
-            variable.hist.Draw('nostack')
+
+            # Draw it
+            opts=''
+            if not self.stack:
+                opts+=' nostack'
+            variable.hist.Draw(opts)
 
             title=variable.title
             if hasattr(variable,'units') and variable.units!=None:
