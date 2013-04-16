@@ -128,6 +128,19 @@ class ConstantVariable(Analysis.Variable):
     def calculate(self):
         return self.x
 
+## Returns an element of a list variable, None if out of range error is encountered
+class ListElementVariable(Analysis.Variable):
+    def __init__(self,var,jidx):
+        Analysis.Variable.__init__(self,'%s_%d'%(var.name,jidx),var.type[1])
+
+        self.var=var
+        self.jidx=jidx
+        
+    def calculate(self):
+        val=self.var.value()
+        if self.jidx>=len(val): return None
+        return val[self.jidx]
+
         
 ## Sum of different variables
 class SumVariable(Analysis.Variable):
