@@ -226,6 +226,8 @@ class Event:
             return float(Event.branch_pointers[branch_name][0])
         elif Event.branch_type[branch_name]==bool:
             return bool(Event.branch_pointers[branch_name][0])
+        elif Event.branch_type[branch_name]==std.string:
+            return str(Event.branch_pointers[branch_name])
         else:
             return Event.branch_pointers[branch_name]
 

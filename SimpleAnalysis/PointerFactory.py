@@ -13,8 +13,11 @@ def get(type):
     pointer=None
     if type in [int,float,bool]:
         pointer=array(get_typecode(type),[0])
+    elif type in [str,std.string]:
+        pointer=std.string()
     elif type.__name__[0:6]=='vector':
         pointer=type()
+
     return pointer
 
 ## Returns the code for a python type, None is not supported.
