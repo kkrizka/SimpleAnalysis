@@ -22,6 +22,7 @@ from ROOT import *
 #
 # The following attributes can be set to control the logic of the analysis:
 #  bigtitle: The title to put on the overall graph
+#  suffix: Text to append to the end of the saved histograms as varname_suffix (None by default)
 #  output_type: Type of output ('png', 'eps' or 'root')
 #  norm_mode: How to normalize individual histograms ('none' or '1')
 #  logy: Whether to log the y axis
@@ -44,15 +45,18 @@ class VariableSortedAnalysis(Analysis.Analysis):
 
         self.variables=[]
         self.bigtitle=''
+        self.suffix=None
         self.norm_mode='none'        
         self.output_type='png'
         self.logy=False
         self.stack=True
 
     def init(self):
+        suffix=''
+        if self.suffix!=None: suffix='_%s'%self.suffix
         # Book histograms for all the variables
         for variable in self.variables:
-            variable.hist=THStack(variable.name,self.bigtitle)
+            variable.hist=THStack(variable.name+suffix,self.bigtitle)
             variable.categories={}
             for category in self.categories:
                 self.book_category(variable,category)
@@ -131,7 +135,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
             c.Update()
 
             # Print it out
-            outfileName="%s"%(variable.name)
+            outfileName="%s-%s"%(self.name,variable.name)
             outfileName=outfileName.replace('/','-')
             if self.output_type=='png':
                 c.SaveAs("%s.png"%outfileName)
