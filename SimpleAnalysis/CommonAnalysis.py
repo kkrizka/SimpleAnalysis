@@ -75,6 +75,8 @@ class VariableCut(Analysis.Cut):
     ## Cut method
     def cut(self):
         value=self.variable.value()
+        if type(value)==tuple:
+            value=value[0]
         if(value<self.minVal):
             return True
         return False
