@@ -16,7 +16,7 @@ def get(typename):
     array_mappings={'UInt_t':'I','Int_t':'i','Float_t':'f','Double_t':'d','Bool_t':'I'}
     if typename in array_mappings:
         pointer=array(array_mappings[typename],[0])
-    elif type in [str,std.string]:
+    elif typename in ['string']:
         pointer=std.string()
     elif typename[0:6]=='vector':
         pointer=std.__getattr__(typename)()
