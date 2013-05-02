@@ -210,6 +210,8 @@ class Event:
     def create_pointer(self,branch_name):
         branch=self.raw.GetBranch(branch_name)
 
+        if self.raw.GetBranch('%s.fUniqueID'%branch_name)!=None:
+            return (None,None) # This is some weird composite type...
         # Determine type by looking at leaves
         leaves=branch.GetListOfLeaves()
         types=[]
