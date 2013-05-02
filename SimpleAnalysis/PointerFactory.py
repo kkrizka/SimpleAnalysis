@@ -5,25 +5,20 @@ from array import array
 ## the user understands int/float objects are actually numpy arrays where the first element is the value of the branch.
 ##
 ## Currently the following types are supported:
-##  int - array of size 1, typecode=i
-##  float - array of size 1, typecode=f
-##  bool - array of size 1, typecode=i
+##  UInt_t - array of size 1, typecode=I
+##  Int_t - array of size 1, typecode=i
+##  Float_t - array of size 1, typecode=f
+##  Double_t - array of size 1, typecode=d
+##  Bool_t - array of size 1, typecode=I
 
-def get(type):
+def get(typename):
     pointer=None
-    if type in [int,float,bool]:
-        pointer=array(get_typecode(type),[0])
+    array_mappings={'UInt_t':'I','Int_t':'i','Float_t':'f','Double_t':'d','Bool_t':'I'}
+    if typename in array_mappings:
+        pointer=array(array_mappings[typename],[0])
     elif type in [str,std.string]:
         pointer=std.string()
-    elif type.__name__[0:6]=='vector':
-        pointer=type()
+    elif typename[0:6]=='vector':
+        pointer=std.__getattr__(typename)()
 
     return pointer
-
-## Returns the code for a python type, None is not supported.
-def get_typecode(type):
-    if type==int or type==bool:
-        return 'i'
-    elif type==float:
-        return 'd'
-    return None

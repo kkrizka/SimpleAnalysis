@@ -209,22 +209,27 @@ class Event:
 
     def create_pointer(self,branch_name):
         branch=self.raw.GetBranch(branch_name)
-        branch.GetEntry(0) # Need to make sure that it is set to something
+
+        # Determine type by looking at leaves
+        leaves=branch.GetListOfLeaves()
+        types=[]
+        for leaf in leaves:
+            types.append(leaf.GetTypeName())
+
+        if len(types)>1: return (None,None) # Dunno how to handle structs yet
 
         # Determine type by obtaining the value the python way
-        raw_attr=self.raw.__getattr__(branch_name)
-        thetype=type(raw_attr)
-        pointer=PointerFactory.get(thetype)
+        pointer=PointerFactory.get(types[0])
         if pointer!=None: # Make sure that this is a supported pointer type
-            return (pointer,thetype)            
+            return (pointer,types[0])            
         return (None,None)
 
     def pointer_value(self,branch_name):
-        if Event.branch_type[branch_name]==int:
+        if Event.branch_type[branch_name] in ['UInt_t','Int_t']:
             return int(Event.branch_pointers[branch_name][0])
-        elif Event.branch_type[branch_name]==float:
+        elif Event.branch_type[branch_name] in ['Float_t','Double_t']:
             return float(Event.branch_pointers[branch_name][0])
-        elif Event.branch_type[branch_name]==bool:
+        elif Event.branch_type[branch_name] in ['Bool_t']:
             return bool(Event.branch_pointers[branch_name][0])
         elif Event.branch_type[branch_name]==std.string:
             return str(Event.branch_pointers[branch_name])
