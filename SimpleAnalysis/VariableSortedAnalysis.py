@@ -83,6 +83,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
 
             # Get the value to fill the histogram with
             values=variable.value()
+
             if values==None: continue # Do not fill if no value returned
             if type(values)!=list:
                 values=[values]
@@ -92,6 +93,10 @@ class VariableSortedAnalysis(Analysis.Analysis):
                 vcategory=[category]*len(values)
             else:
                 vcategory=category
+
+            if len(vcategory)!=len(values):
+                print 'ERROR: variable count != category count'
+                continue
 
             # Fill the histograms
             for j in range(len(values)):
@@ -121,7 +126,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
             # Draw it
             opts=''
             if not self.stack:
-                opts+=' nostack'
+                opts+='nostack'
             variable.hist.Draw(opts)
 
             title=variable.title
