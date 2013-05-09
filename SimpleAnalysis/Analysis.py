@@ -126,6 +126,7 @@ class Cut:
 ##  tree - The TTree being used
 ##  
 class EventFile:
+    branch_accessed=None
     def __init__(self,path,treeName):
         self.path=path
         self.treeName=treeName
@@ -134,6 +135,7 @@ class EventFile:
 
         self.fh=None
         self.tree=None
+        EventFile.branch_accessed=set()
 
     # Load the tree from the file and store it into the tree member
     # attribute. Set it to None if the tree is not found.
@@ -148,7 +150,11 @@ class EventFile:
 
     # Close the file, and cleanup any extra stuff
     def close(self):
-        self.fh.Close()    
+        self.fh.Close()
+        print '== Branches Used =='
+        branch_accessed=sorted(EventFile.branch_accessed)
+        for branch in branch_accessed:
+            print branch
 
 
 ## This is a general class for an event. It is up to the reader classes (unimplemented)
@@ -172,6 +178,7 @@ class Event:
 
     # Returns a pointer to the requested branch
     def __getattr__(self,attr):
+        EventFile.branch_accessed.add(attr)
         if attr in Event.branch_pointers: # Check pointer for this branch
             return self.pointer_value(attr)
         if attr in self.branch_cache: # Check if has already been calculated
@@ -183,10 +190,8 @@ class Event:
                 branch=self.raw.GetBranch(attr)
 
                 # Set status
-                self.raw.SetBranchStatus(attr,1)
-                if branch.GetListOfBranches().GetEntries()>0:
-                    self.raw.SetBranchStatus(attr+'.*',1) # subbranches
-
+                self.enable_branch(branch)
+                
                 # Create a pointer, is possible
                 if attr not in Event.branch_type: # will be set to None if pointer creation was attempted earlier, but failed
                     (pointer,thetype)=self.create_pointer(attr)
@@ -206,6 +211,11 @@ class Event:
                 return self.branch_cache[attr]
 
         raise AttributeError('%r object has no attribute %r'%(type(self),attr))
+
+    def enable_branch(self,branch):
+        branch.SetStatus(1)
+        for subbranch in branch.GetListOfBranches():
+            self.enable_branch(subbranch)
 
     def create_pointer(self,branch_name):
         branch=self.raw.GetBranch(branch_name)

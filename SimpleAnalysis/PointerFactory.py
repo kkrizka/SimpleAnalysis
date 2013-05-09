@@ -20,5 +20,7 @@ def get(typename):
         pointer=std.string()
     elif typename[0:6]=='vector':
         pointer=std.__getattr__(typename)()
+    elif typename=='TVector2':
+        pointer=TVector2()
 
     return pointer
