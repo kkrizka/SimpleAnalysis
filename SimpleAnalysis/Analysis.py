@@ -135,6 +135,11 @@ class EventFile:
 
         self.fh=None
         self.tree=None
+
+        self.eventidx=None
+        self.branch_pointers={}
+        self.branch_type={}
+        
         EventFile.branch_accessed=set()
 
     # Load the tree from the file and store it into the tree member
@@ -148,6 +153,14 @@ class EventFile:
         self.tree=self.fh.Get(self.treeName)
         return True
 
+    # Load the corresponding event
+    def event(self,idx):
+        self.tree.GetEntry(idx)
+        self.eventidx=idx
+        event=Event(self)
+        return event
+                            
+
     # Close the file, and cleanup any extra stuff
     def close(self):
         self.fh.Close()
@@ -155,6 +168,55 @@ class EventFile:
         branch_accessed=sorted(EventFile.branch_accessed)
         for branch in branch_accessed:
             print branch
+
+    # Setups a pointer to a branch and returns it. If creation failed, return None.
+    def branch_pointer(self,branchname):
+        if branchname in self.branch_pointers: # Check pointer for this branch
+            return (self.branch_pointers[branchname],self.branch_type[branchname])
+
+        # Not cached, so create it
+        branch=self.tree.GetBranch(branchname)
+
+        # Set status
+        self.enable_branch(branch)
+        
+        # Create a pointer, is possible
+        (pointer,thetype)=self.create_pointer(branchname)
+        self.branch_pointers[branchname]=pointer
+        self.branch_type[branchname]=thetype
+        if pointer!=None:
+            self.tree.SetBranchAddress(branchname,pointer)
+            if self.eventidx!=None: self.tree.GetEntry(self.eventidx)
+        return (pointer,thetype)
+
+
+    def enable_branch(self,branch):
+        branch.SetStatus(1)
+        for subbranch in branch.GetListOfBranches():
+            self.enable_branch(subbranch)
+
+    def create_pointer(self,branchname):
+        branch=self.tree.GetBranch(branchname)
+
+        types=[]
+        # Check for composite type
+        if self.tree.GetBranch('%s.fUniqueID'%branchname)!=None:
+            if self.tree.GetBranch('%s.fP.fUniqueID'%branchname)!=None and self.tree.GetBranch('%s.fE'%branchname)!=None:
+                types.append('vector<TLorentzVector>')
+            else:
+                return (None,None) # This is some weird composite type...
+        else: # Determine type by looking at leaves
+            leaves=branch.GetListOfLeaves()
+            for leaf in leaves:
+                types.append(leaf.GetTypeName())
+
+        if len(types)>1: return (None,None) # Dunno how to handle structs yet
+
+        # Determine type by obtaining the value the python way
+        pointer=PointerFactory.get(types[0])
+        if pointer!=None: # Make sure that this is a supported pointer type
+            return (pointer,types[0])            
+        return (None,None)
 
 
 ## This is a general class for an event. It is up to the reader classes (unimplemented)
@@ -169,84 +231,39 @@ class EventFile:
 ##  raw: The raw entry in the TTree for direct access
 ##  idx: The index inside the TTree of the currently processed eventp
 class Event:
-    branch_pointers={}
-    branch_type={}
-    def __init__(self,raw):
+    def __init__(self,eventfile):
         self.idx=None
-        self.raw=raw
+        self.eventfile=eventfile
+        self.raw=eventfile.tree
         self.branch_cache={}
 
     # Returns a pointer to the requested branch
     def __getattr__(self,attr):
         EventFile.branch_accessed.add(attr)
-        if attr in Event.branch_pointers: # Check pointer for this branch
-            return self.pointer_value(attr)
+
+        pointer,thetype=self.eventfile.branch_pointer(attr)
+        if pointer!=None:  # Check pointer for this branch
+            return self.pointer_value(pointer,thetype)
         if attr in self.branch_cache: # Check if has already been calculated
             return self.branch_cache[attr]
 
-        # Not cached, so update the information
-        if self.raw.FindBranch(attr):
-            if self.raw.GetBranchStatus(attr)==0:
-                branch=self.raw.GetBranch(attr)
-
-                # Set status
-                self.enable_branch(branch)
-                
-                # Create a pointer, is possible
-                if attr not in Event.branch_type: # will be set to None if pointer creation was attempted earlier, but failed
-                    (pointer,thetype)=self.create_pointer(attr)
-                    if pointer!=None:
-                        Event.branch_pointers[attr]=pointer
-                        Event.branch_type[attr]=thetype
-                        self.raw.SetBranchAddress(attr,pointer)
-                    else:
-                        Event.branch_type[attr]=None
-
-                # Update the values
-                branch.GetEntry(self.idx)
-            if attr in Event.branch_pointers:
-                return self.pointer_value(attr)
-            else:
-                self.branch_cache[attr]=self.raw.__getattr__(attr)
-                return self.branch_cache[attr]
+        if hasattr(self.raw,attr): # If it exists, direct access
+            self.branch_cache[attr]=self.raw.__getattr__(attr)
+            return self.branch_cache[attr]
 
         raise AttributeError('%r object has no attribute %r'%(type(self),attr))
 
-    def enable_branch(self,branch):
-        branch.SetStatus(1)
-        for subbranch in branch.GetListOfBranches():
-            self.enable_branch(subbranch)
-
-    def create_pointer(self,branch_name):
-        branch=self.raw.GetBranch(branch_name)
-
-        if self.raw.GetBranch('%s.fUniqueID'%branch_name)!=None:
-            return (None,None) # This is some weird composite type...
-        # Determine type by looking at leaves
-        leaves=branch.GetListOfLeaves()
-        types=[]
-        for leaf in leaves:
-            types.append(leaf.GetTypeName())
-
-        if len(types)>1: return (None,None) # Dunno how to handle structs yet
-
-        # Determine type by obtaining the value the python way
-        pointer=PointerFactory.get(types[0])
-        if pointer!=None: # Make sure that this is a supported pointer type
-            return (pointer,types[0])            
-        return (None,None)
-
-    def pointer_value(self,branch_name):
-        if Event.branch_type[branch_name] in ['UInt_t','Int_t']:
-            return int(Event.branch_pointers[branch_name][0])
-        elif Event.branch_type[branch_name] in ['Float_t','Double_t']:
-            return float(Event.branch_pointers[branch_name][0])
-        elif Event.branch_type[branch_name] in ['Bool_t']:
-            return bool(Event.branch_pointers[branch_name][0])
-        elif Event.branch_type[branch_name]==std.string:
-            return str(Event.branch_pointers[branch_name])
+    def pointer_value(self,pointer,type):
+        if type in ['UInt_t','Int_t']:
+            return int(pointer[0])
+        elif type in ['Float_t','Double_t']:
+            return float(pointer[0])
+        elif type in ['Bool_t']:
+            return bool(pointer[0])
+        elif type==std.string:
+            return str(pointer)
         else:
-            return Event.branch_pointers[branch_name]
+            return pointer
 
 
 ## This is just a general class for doing analysis. It has the following
@@ -365,9 +382,7 @@ class Analysis:
                     events_processed=nEvents
                     break
 
-                eventfile.tree.GetEntry(evt_idx)
-                
-                self.event=Event(eventfile.tree)
+                self.event=eventfile.event(evt_idx)
                 self.event.idx=evt_idx
                 VariableFactory.setEvent(self.event)
 
