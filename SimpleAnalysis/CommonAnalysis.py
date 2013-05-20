@@ -206,3 +206,20 @@ class RawBranchVariable(Analysis.Variable):
             return str(self.event.__getattr__(self.branch_name))
         else:
             return self.event.__getattr__(self.branch_name)
+
+## Returns a result of a TFormula
+class FormulaVariable(Analysis.Variable):
+    def __init__(self,expr,type=float):
+        Analysis.Variable.__init__(self,expr,type)
+        self.expr=expr
+        self.formula=None
+        
+    def calculate(self):
+        if self.formula==None:
+            self.event.raw.SetBranchStatus('*',1)
+            self.formula=TTreeFormula(self.expr,self.expr,self.event.raw)
+
+        if self.formula.GetTree()!=self.event.raw:
+            self.formula.SetTree(self.event.raw)
+            
+        return self.formula.EvalInstance()
