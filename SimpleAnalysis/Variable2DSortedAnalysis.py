@@ -1,5 +1,6 @@
 from SimpleAnalysis import Analysis
 from SimpleAnalysis import OutputFactory
+from SimpleAnalysis import Category
 
 from ROOT import *
 
@@ -55,6 +56,11 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         self.histograms=[]
 
     def init(self):
+        # Create a default category, if none exist
+        if len(self.categories)==0:
+            category=Category.Category('default','Default')
+            self.categories.append(category)    
+
         # Book histograms for all the variables
         for i1 in range(len(self.variables)-1):
             var1=self.variables[i1]
@@ -85,7 +91,10 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         self.histograms.append(h)
 
     def run_event(self):
-        category=self.category.value()
+        if self.category!=None:
+            category=self.category.value()
+        else:
+            category='default'
         if category==None: return
 
         for h in self.histograms:

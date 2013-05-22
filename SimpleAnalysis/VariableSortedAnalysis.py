@@ -1,5 +1,6 @@
 from SimpleAnalysis import Analysis
 from SimpleAnalysis import OutputFactory
+from SimpleAnalysis import Category
 
 from ROOT import *
 
@@ -15,6 +16,7 @@ from ROOT import *
 # requires the following optional attributes:
 #  linecolor: Color to use to draw the line
 #  linestyle: Style used to draw the line
+#  fillcolor: Color to use to fill the histogram
 #
 # If a variable to be plotted returns a list of numbers, all of them are added to
 # a histogram invididually. The category variable can return a list of the same
@@ -54,6 +56,12 @@ class VariableSortedAnalysis(Analysis.Analysis):
     def init(self):
         suffix=''
         if self.suffix!=None: suffix='_%s'%self.suffix
+
+        # Create a default category, if none exist
+        if len(self.categories)==0:
+            category=Category.Category('default','Default')
+            self.categories.append(category)    
+            
         # Book histograms for all the variables
         for variable in self.variables:
             variable.hist=THStack(variable.name+suffix,self.bigtitle)
@@ -68,14 +76,19 @@ class VariableSortedAnalysis(Analysis.Analysis):
                variable.minval,
                variable.maxval)
         if hasattr(category,'linecolor'):
-                h.SetLineColor(category.linecolor)
+            h.SetLineColor(category.linecolor)
         if hasattr(category,'linestyle'):
             h.SetLineStyle(category.linestyle)
+        if hasattr(category,'fillcolor'):
+            h.SetFillColor(category.fillcolor)
         variable.categories[category.name]=h
         variable.hist.Add(h)
 
     def run_event(self):
-        category=self.category.value()
+        if self.category!=None:
+            category=self.category.value()
+        else:
+            category='default'
         if category==None: return
 
         for i in range(len(self.variables)):
@@ -111,7 +124,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
 
     def deinit(self):
         # Draw
-        c=TCanvas('c1','c1')
+        c=TCanvas()
         if self.logy:
             c.SetLogy(True)
 
@@ -135,7 +148,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
             variable.hist.GetXaxis().SetTitle(title)
 
             if len(variable.categories)>1:
-                l=c.BuildLegend(.65,.65,.98,.95)
+                l=c.BuildLegend(.65,.98-len(variable.categories)*0.04,.98,.98)
                 l.Draw()
             c.Update()
 
