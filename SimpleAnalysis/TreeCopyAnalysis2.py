@@ -104,4 +104,5 @@ class TreeCopyAnalysis(Analysis.Analysis):
         self.tree.Fill()
 
     def deinit_eventfile(self):
+        self.fh.cd()
         self.tree.Write()
