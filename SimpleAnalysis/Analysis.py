@@ -335,11 +335,13 @@ class Analysis:
         timing=Timing.Timing()
 
         for eventfile in self.eventfiles:
+            eventfile.cutflow=[]
             VariableFactory.setEventFile(eventfile)
             VariableFactory.setEvent(None)
             for cut in self.cuts:
                 cut.eventfile=eventfile
                 cut.event=None
+                eventfile.cutflow.append(0)
             self.eventfile=eventfile
 
             # Open the file
@@ -391,11 +393,13 @@ class Analysis:
                 print "=============================="
                 # Check for cuts..
                 docut=False
-                for cut in self.cuts:
+                for cidx in range(len(self.cuts)):
+                    cut=self.cuts[cidx]
                     cut.event=self.event
                     if cut.cut()!=cut.invert:
                         docut=True
                         break
+                    eventfile.cutflow[cidx]+=1
                 if docut:
                     print "!!!! THIS EVENT HAS BEEN CUT !!!!"
                     continue
@@ -411,6 +415,9 @@ class Analysis:
             eventfile.eff=1.0*events_passed/events_processed
             self.deinit_eventfile()
             # Print out a summary
+            print 'Cut Flow:'
+            for cidx in range(len(eventfile.cutflow)):
+                print '\tPassing cut %s: %d'%(self.cuts[cidx].__class__.__name__,eventfile.cutflow[cidx])
             print "Cut Efficiency: %d/%d = %f"%(events_passed,events_processed,(float(events_passed)/events_processed))
 
             eventfile.close()
