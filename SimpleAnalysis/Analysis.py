@@ -235,21 +235,22 @@ class Event:
         self.idx=None
         self.eventfile=eventfile
         self.raw=eventfile.tree
-        self.branch_cache={}
 
     # Returns a pointer to the requested branch
     def __getattr__(self,attr):
         EventFile.branch_accessed.add(attr)
 
         pointer,thetype=self.eventfile.branch_pointer(attr)
+        val=None
         if pointer!=None:  # Check pointer for this branch
-            return self.pointer_value(pointer,thetype)
-        if attr in self.branch_cache: # Check if has already been calculated
-            return self.branch_cache[attr]
-
-        if hasattr(self.raw,attr): # If it exists, direct access
+            val=self.pointer_value(pointer,thetype)
+        elif hasattr(self.raw,attr): # If it exists, direct access
             self.branch_cache[attr]=self.raw.__getattr__(attr)
-            return self.branch_cache[attr]
+            val=self.branch_cache[attr]
+
+        if val!=None:
+            setattr(self,attr,val)
+            return val
 
         raise AttributeError('%r object has no attribute %r'%(type(self),attr))
 
