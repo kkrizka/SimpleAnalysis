@@ -20,6 +20,7 @@ class TreeCopyAnalysis(Analysis.Analysis):
 
         self.variables=[]
         self.branches=[]
+        self.trees=[]
 
     def init(self):
         # Create variable pointers
@@ -62,6 +63,23 @@ class TreeCopyAnalysis(Analysis.Analysis):
             self.fh=OutputFactory.getTFile(self.eventfile.output)
         else:
             self.fh=OutputFactory.getTFile(os.path.basename(self.eventfile.path))
+
+        # Copy any additional trees
+        for tree in self.trees:
+            dirname=os.path.dirname(tree)
+            if dirname!='':
+                d=self.fh.GetDirectory(dirname)
+                if not d:
+                    d=self.fh.mkdir(dirname)
+            else:
+                d=self.fh
+            d.cd()
+            tin=self.eventfile.fh.Get(tree)
+            tout=tin.CloneTree(0)
+            tin.CopyAddresses(tout)
+            tout.CopyEntries(tout)
+            tout.Write()
+        self.fh.cd()
 
         # Create the output tree
         if len(self.branches)==0: self.eventfile.tree.SetBranchStatus('*',1) # copy all branches
