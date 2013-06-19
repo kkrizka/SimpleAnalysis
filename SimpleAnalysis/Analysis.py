@@ -344,8 +344,8 @@ class Analysis:
                 print "ERROR: Tree not found!"
                 continue
             if eventfile.tree.GetEntries()==0:
-                print 'ERROR: Tree has no entries!'
-                continue
+                print 'Warning: Tree has no entries!'
+
             eventfile.tree.SetBranchStatus("*",0)
             
             gROOT.cd()
@@ -406,13 +406,14 @@ class Analysis:
                 self.run_event()
                 timing.end()
 
-            eventfile.eff=1.0*events_passed/events_processed
+            if events_processed>0: eventfile.eff=1.0*events_passed/events_processed
+            else: eventfile.eff=1.
             self.deinit_eventfile()
             # Print out a summary
             print 'Cut Flow:'
             for cidx in range(len(eventfile.cutflow)):
                 print '\tPassing cut %s: %d'%(self.cuts[cidx].__class__.__name__,eventfile.cutflow[cidx])
-            print "Cut Efficiency: %d/%d = %f"%(events_passed,events_processed,(float(events_passed)/events_processed))
+            print "Cut Efficiency: %d/%d = %f"%(events_passed,events_processed,eventfile.eff)
 
             eventfile.close()
         self.deinit()

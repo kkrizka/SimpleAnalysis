@@ -54,9 +54,6 @@ class VariableSortedAnalysis(Analysis.Analysis):
         self.stack=True
 
     def init(self):
-        suffix=''
-        if self.suffix!=None: suffix='_%s'%self.suffix
-
         # Create a default category, if none exist
         if len(self.categories)==0:
             category=Category.Category('default','Default')
@@ -64,7 +61,6 @@ class VariableSortedAnalysis(Analysis.Analysis):
             
         # Book histograms for all the variables
         for variable in self.variables:
-            variable.hist=THStack(variable.name+suffix,self.bigtitle)
             variable.categories={}
             for category in self.categories:
                 self.book_category(variable,category)
@@ -82,7 +78,6 @@ class VariableSortedAnalysis(Analysis.Analysis):
         if hasattr(category,'fillcolor'):
             h.SetFillColor(category.fillcolor)
         variable.categories[category.name]=h
-        variable.hist.Add(h)
 
     def run_event(self):
         if self.category!=None:
@@ -123,6 +118,9 @@ class VariableSortedAnalysis(Analysis.Analysis):
                     h.Fill(value)
 
     def deinit(self):
+        suffix=''
+        if self.suffix!=None: suffix='_%s'%self.suffix
+
         # Draw
         c=TCanvas()
         if self.logy:
@@ -131,12 +129,22 @@ class VariableSortedAnalysis(Analysis.Analysis):
         for variable in self.variables:
             c.Clear()
 
-            # Normalize histograms, if requested
-            if self.norm_mode=='1':
-                for h in variable.hist.GetHists():
-                    if h.Integral()!=0: h.Scale(1./h.Integral())
+            ## Create a stacked histogram
+            variable.hist=THStack(variable.name+suffix,self.bigtitle)
 
-            # Draw it
+            # Make a list of histograms
+            hists=[]
+            for category,h in variable.categories.items():
+                if h.Integral()==0: continue # ignore empty histograms
+                hists.append(h)
+            hists=sorted(hists,key=lambda h: h.Integral())
+
+            # Add histograms
+            for h in hists:
+                if self.norm_mode=='1': h.Scale(1./h.Integral())
+                variable.hist.Add(h)
+
+            ## Draw it
             opts=''
             if not self.stack:
                 opts+='nostack'
