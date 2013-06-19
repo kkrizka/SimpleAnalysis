@@ -126,7 +126,6 @@ class Cut:
 ##  tree - The TTree being used
 ##  
 class EventFile:
-    branch_accessed=None
     def __init__(self,path,treeName):
         self.path=path
         self.treeName=treeName
@@ -140,8 +139,6 @@ class EventFile:
         self.branch_pointers={}
         self.branch_type={}
         
-        EventFile.branch_accessed=set()
-
     # Load the tree from the file and store it into the tree member
     # attribute. Set it to None if the tree is not found.
     #
@@ -164,10 +161,6 @@ class EventFile:
     # Close the file, and cleanup any extra stuff
     def close(self):
         self.fh.Close()
-        print '== Branches Used =='
-        branch_accessed=sorted(EventFile.branch_accessed)
-        for branch in branch_accessed:
-            print branch
 
     # Setups a pointer to a branch and returns it. If creation failed, return None.
     def branch_pointer(self,branchname):
@@ -176,6 +169,8 @@ class EventFile:
 
         # Not cached, so create it
         branch=self.tree.GetBranch(branchname)
+        if branch==None: # Branch does not exist!
+            return None,None
 
         # Set status
         self.enable_branch(branch)
@@ -238,8 +233,6 @@ class Event:
 
     # Returns a pointer to the requested branch
     def __getattr__(self,attr):
-        EventFile.branch_accessed.add(attr)
-
         pointer,thetype=self.eventfile.branch_pointer(attr)
         val=None
         if pointer!=None:  # Check pointer for this branch
