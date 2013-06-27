@@ -121,6 +121,10 @@ class VariableSortedAnalysis(Analysis.Analysis):
         suffix=''
         if self.suffix!=None: suffix='_%s'%self.suffix
 
+        if self.output_type=='root':
+            f=OutputFactory.getTFile()
+            f.cd()
+
         # Draw
         c=TCanvas()
         if self.logy:
@@ -169,7 +173,5 @@ class VariableSortedAnalysis(Analysis.Analysis):
             elif self.output_type=='eps':
                 c.SaveAs("%s.eps"%outfileName)
             elif self.output_type=='root':
-                f=OutputFactory.getTFile()
-                f.cd()
                 variable.hist.Write()
 
