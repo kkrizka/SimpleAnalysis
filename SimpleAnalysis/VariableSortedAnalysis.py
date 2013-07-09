@@ -90,7 +90,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
             variable=self.variables[i]
 
             # Get the value to fill the histogram with
-            values=variable.value()
+            values=variable.wvalue()
 
             if values==None: continue # Do not fill if no value returned
             if type(values)!=list:

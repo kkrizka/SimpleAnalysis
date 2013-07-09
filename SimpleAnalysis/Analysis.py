@@ -14,8 +14,11 @@ import Timing
 # is another variable that returns either a single value or a list. In the case of a
 # single value, the same weight is set for all of the values returned by a variable. If
 # it is a list, then the index of the weight list is matched to the index of the value
-# list. It is possible to override this weight by having the variable return a tuple
-# itself.
+# list.
+#
+# To obtain the list of values with their weights, use the wvalue() function. The weights
+# are appended to the values as a second entry in the tuple. The first entry is the
+# value.
 #
 # Variable values can be automatically cached, which is useful if they are used 
 # several times at different parts of the analysis. Only the last value is cached 
@@ -51,31 +54,34 @@ class Variable:
         self.event=None
         self.eventfile=None
 
-    # All subclasses need to implement this function. This is what is called for
-    # each event and it should return the value that this variable represents.
-    # Overriding this function disables caching.
+    # The value returned by this variable, with cache lookup.
     def value(self):
         if self.dirty_bit:
             self.cached_value=self.calculate()
             self.dirty_bit=False
 
-            # Apply weighting, if necessary
-            if self.weight!=None and self.cached_value!=None:
-                weights=self.weight.value()
-                is_weights_list=(type(weights)==list)
-                if type(self.cached_value)==list: # Apply weight item-by-item
-                    for idx in range(len(self.cached_value)):
-                        cached_value=self.cached_value[idx]
-                        if type(cached_value)!=tuple: # No weight applied yet
-                            if is_weights_list:
-                                self.cached_value[idx]=(cached_value,weights[idx])
-                            else:
-                                self.cached_value[idx]=(cached_value,weights)
-                else:
-                    if type(self.cached_value)!=tuple: # No weight applied yet
-                        self.cached_value=(self.cached_value,weights)
-            
         return self.cached_value;
+
+    # The value of this variable, along with the weight.
+    def wvalue(self):
+        values=self.value()
+        # Apply weighting, if necessary
+        if self.weight!=None and values!=None:
+            weights=self.weight.value()
+            is_weights_list=(type(weights)==list)
+            if type(values)==list: # Apply weight item-by-item
+                for idx in range(len(values)):
+                    value=values[idx]
+                    if type(cached_value)!=tuple: # No weight applied yet
+                        if is_weights_list:
+                            values[idx]=(value,weights[idx])
+                        else:
+                            values[idx]=(value,weights)
+            else:
+                values=(values,weights)
+            
+
+        return values
 
     # All subclasses that wish to cache their results should implement this
     # instead of value(). It works the same way as value().

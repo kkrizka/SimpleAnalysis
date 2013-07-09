@@ -99,12 +99,12 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
 
         for h in self.histograms:
             # Get the value to fill the histogram with
-            values1=h.var1.value()
+            values1=h.var1.wvalue()
             if values1==None: continue # Do not fill if no value returned
             if type(values1)!=list:
                 values1=[values1]
 
-            values2=h.var2.value()
+            values2=h.var2.wvalue()
             if values2==None: continue # Do not fill if no value returned
             if type(values2)!=list:
                 values2=[values2]
