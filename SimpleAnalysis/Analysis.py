@@ -89,9 +89,12 @@ class Variable:
         return 0
 
 ##
-## This is a general class that can be used to implement cuts on a set of 
-## simulated events.
+## This is a general class that can be used to implement cuts on events
 ##
+## The following are useful attributes that can be set
+##  variable - A variable describing the value that this cuts on (default: constant 0)
+##  invert - Whether to invert the decision on this cut
+##  
 ## The following are some useful member parameters that are available to perform
 ## analysis when each of the triggers are called.
 ##  event - The entry in the TTree currently being processed
@@ -103,6 +106,8 @@ class Cut:
     def __init__(self,invert=False):
         self.invert=invert
 
+        self.variable=None
+        
         self.event=None
         self.eventfile=None
     
@@ -111,10 +116,6 @@ class Cut:
     # False if it is to be kept (included in further calculations).
     #
     # The return value of this ignores the value of self.invert.
-    #
-    # The arguments are the list of particles output by the 
-    # Pythia8 plugin to ROOT. The list is a TClonesArray filled
-    # with TParticles objects.
     def cut(self):
         return False
 
@@ -279,7 +280,14 @@ class Event:
 ## Everything is run when the run() function is called.
 ##
 ## It is also possible to add "cuts", using the Cut classes. When these cuts are
-## added, then only events that pass them are processed by the event function.
+## added, then only events that pass them are processed by the event function. The
+## cutflow information is stored inside a file called cutflow-fileidx.root. The fileidx
+## is replaced by the number of the file being processed. The information is stored in the
+## form of histograms. There are two histograms for each cut: cutidx_passed and cutidx_all.
+## The idx is replaced by the number of the cut in the list. The two histograms correspond
+## to the passed events and all events. The values filled into the histogram are determined by
+## Cut.variable attribute. This should have attributes minval,maxval and nbins to dictate
+## the binning of the histogram.
 ##
 ## The following are some useful member parameters that are available to perform
 ## analysis when each of the triggers are called.
@@ -334,15 +342,29 @@ class Analysis:
 
         timing=Timing.Timing()
 
-        for eventfile in self.eventfiles:
-            eventfile.cutflow=[]
+        for eventfileidx in range(len(self.eventfiles)):
+            eventfile=self.eventfiles[eventfileidx]
             VariableFactory.setEventFile(eventfile)
             VariableFactory.setEvent(None)
-            for cut in self.cuts:
+            self.eventfile=eventfile
+
+            # Initialzie the cutflow information for this event
+            eventfile.cutflow_fh=OutputFactory.getTFile('cutflow_%d.root'%eventfileidx)
+            for cutidx in range(len(self.cuts)):
+                cut=self.cuts[cutidx]
+                # Configure cuts
                 cut.eventfile=eventfile
                 cut.event=None
-                eventfile.cutflow.append(0)
-            self.eventfile=eventfile
+
+                # Create necessary histograms
+                minval=cut.variable.minval if cut.variable!=None else 0.
+                maxval=cut.variable.maxval if cut.variable!=None else 1.
+                nbins=cut.variable.nbins if cut.variable!=None else 1
+                cut.passed=TH1D('cut%02d_passed'%cutidx,'',
+                                nbins,minval,maxval)
+                cut.all=TH1D('cut%02d_all'%cutidx,'',
+                                nbins,minval,maxval)
+                cut.count=0
 
             # Open the file
             eventfile.load_tree()
@@ -396,10 +418,24 @@ class Analysis:
                 for cidx in range(len(self.cuts)):
                     cut=self.cuts[cidx]
                     cut.event=self.event
+
+                    values=cut.variable.wvalue() if cut.variable!=None else 0.
+                    if(type(values)!=list): values=[values]
+                    for value in values:
+                        if value==None: continue
+                        if type(value)!=tuple: value=(value,)
+                        cut.all.Fill(*value)
+                    
                     if cut.cut()!=cut.invert:
                         docut=True
                         break
-                    eventfile.cutflow[cidx]+=1
+                    for value in values:
+                        if value==None: continue
+                        if type(value)!=tuple: value=(value,)
+                        cut.passed.Fill(*value)
+                        cut.count+=1
+
+                        
                 if docut:
                     print "!!!! THIS EVENT HAS BEEN CUT !!!!"
                     continue
@@ -417,8 +453,11 @@ class Analysis:
             self.deinit_eventfile()
             # Print out a summary
             print 'Cut Flow:'
-            for cidx in range(len(eventfile.cutflow)):
-                print '\tPassing cut %s: %d'%(self.cuts[cidx].__class__.__name__,eventfile.cutflow[cidx])
+            self.eventfile.cutflow_fh.cd()
+            for cut in self.cuts:
+                cut.passed.Write()
+                cut.all.Write()
+                print '\tPassing cut %s: %d'%(cut.__class__.__name__,cut.count)
             print "Cut Efficiency: %d/%d = %f"%(events_passed,events_processed,eventfile.eff)
 
             eventfile.close()
