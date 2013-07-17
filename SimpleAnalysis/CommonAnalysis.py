@@ -69,12 +69,12 @@ class VariableCut(Analysis.Cut):
     ##           (Default: False)
     def __init__(self,variable,minVal,invert=False):
         Analysis.Cut.__init__(self,invert)
-        self.variable=variable
+        self.thevariable=variable
         self.minVal=minVal
 
     ## Cut method
     def cut(self):
-        value=self.variable.value()
+        value=self.thevariable.value()
         if type(value)==tuple:
             value=value[0]
         if(value<self.minVal):
@@ -92,12 +92,12 @@ class VariableEqualCut(Analysis.Cut):
     ##           (Default: False)
     def __init__(self,variable,val,invert=False):
         Analysis.Cut.__init__(self,invert)
-        self.variable=variable
+        self.thevariable=variable
         self.val=val
 
     ## Cut method
     def cut(self):
-        value=self.variable.value()
+        value=self.thevariable.value()
         if value!=self.val: return True
         else: return False
 
@@ -111,11 +111,11 @@ class VariableFlagCut(Analysis.Cut):
     ##           (Default: False)
     def __init__(self,variable,invert=False):
         Analysis.Cut.__init__(self,invert)
-        self.variable=variable
+        self.thevariable=variable
 
     ## Cut method
     def cut(self):
-        value=self.variable.value()
+        value=self.thevariable.value()
         if value==0: return True
         else: return False
 
