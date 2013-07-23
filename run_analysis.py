@@ -103,12 +103,15 @@ for input in options.input:
         fh=open(inpath,'rb')
         identifier=fh.read(4)
         version=fh.read(4)
-        fh.seek(33)
-        compression=fh.read(4)
-        fh.close()
         identifier=''.join(struct.unpack('cccc',identifier))
         version=struct.unpack('>i',version)[0]
+
+        if version>=1000000: fh.seek(41)
+        else: fh.seek(33)
+            
+        compression=fh.read(4)
         compression=struct.unpack('>i',compression)[0]
+        fh.close()
 #        print identifier,version,compression
         if identifier=='root' and compression<1000: # Assume the fVersion is not using any numbers in ASCII range
             isROOT=True
