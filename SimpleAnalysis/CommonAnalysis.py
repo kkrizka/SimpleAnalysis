@@ -219,13 +219,12 @@ class FormulaVariable(Analysis.Variable):
         Analysis.Variable.__init__(self,expr,type)
         self.expr=expr
         self.formula=None
+        self.lasttree=None
         
     def calculate(self):
-        if self.formula==None:
+        if self.formula==None or self.lasttree!=self.event.raw:
             self.event.raw.SetBranchStatus('*',1)
             self.formula=TTreeFormula(self.expr,self.expr,self.event.raw)
-
-        if self.formula.GetTree()!=self.event.raw:
-            self.formula.SetTree(self.event.raw)
+            self.lasttree=self.event.raw
             
         return self.formula.EvalInstance()
