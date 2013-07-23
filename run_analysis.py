@@ -12,6 +12,7 @@ from SimpleAnalysis import VariableFactory
 
 import optparse
 import tempfile
+import urlparse
 
 ##
 # This is a general script to run the analysis on a set of simulated events.
@@ -93,7 +94,27 @@ for input in options.input:
         continue
     intree=input_parts.pop()
     inpath=':'.join(input_parts)
-    evset=Analysis.EventFile(inpath,intree)
-    analysis.eventfiles.append(evset)
+
+    # Determine if a file is a filelist or just a root file
+    o=urlparse.urlparse(inpath)
+    isFilelist=False
+    if o.scheme=='': # Filelists can only be local
+        fh=open(inpath,'rb')
+        identifier=fh.read(4)
+        version=fh.read(4)
+        fh.close()
+        if identifier and all(ord(c)<128 for c in version): # Assume the fVersion is not using any numbers in ASCII range
+            isFilelist=True
+
+    if isFilelist:
+        fh=open(inpath)
+        for inpath in fh:
+            inpath=inpath.strip()
+            if inpath.startswith('#'): continue
+            evset=Analysis.EventFile(inpath,intree)
+            analysis.eventfiles.append(evset)
+    else:
+        evset=Analysis.EventFile(inpath,intree)
+        analysis.eventfiles.append(evset)
 
 analysis.run()
