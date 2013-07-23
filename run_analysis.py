@@ -13,6 +13,7 @@ from SimpleAnalysis import VariableFactory
 import optparse
 import tempfile
 import urlparse
+import struct
 
 ##
 # This is a general script to run the analysis on a set of simulated events.
@@ -97,24 +98,33 @@ for input in options.input:
 
     # Determine if a file is a filelist or just a root file
     o=urlparse.urlparse(inpath)
-    isFilelist=False
+    isROOT=True
     if o.scheme=='': # Filelists can only be local
         fh=open(inpath,'rb')
         identifier=fh.read(4)
         version=fh.read(4)
+        fh.seek(33)
+        compression=fh.read(4)
         fh.close()
-        if identifier and all(ord(c)<128 for c in version): # Assume the fVersion is not using any numbers in ASCII range
-            isFilelist=True
+        identifier=''.join(struct.unpack('cccc',identifier))
+        version=struct.unpack('>i',version)[0]
+        compression=struct.unpack('>i',compression)[0]
+#        print identifier,version,compression
+        if identifier=='root' and compression<1000: # Assume the fVersion is not using any numbers in ASCII range
+            isROOT=True
+        else:
+            isROOT=False
 
-    if isFilelist:
+    if isROOT:
+        print 'isROOT'
+        evset=Analysis.EventFile(inpath,intree)
+        analysis.eventfiles.append(evset)
+    else:
         fh=open(inpath)
         for inpath in fh:
             inpath=inpath.strip()
             if inpath.startswith('#'): continue
             evset=Analysis.EventFile(inpath,intree)
             analysis.eventfiles.append(evset)
-    else:
-        evset=Analysis.EventFile(inpath,intree)
-        analysis.eventfiles.append(evset)
 
 analysis.run()
