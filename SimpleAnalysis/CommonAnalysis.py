@@ -136,6 +136,23 @@ class ConstantVariable(Analysis.Variable):
     def calculate(self):
         return self.x
 
+## Returns a the absolute value
+class AbsoluteVariable(Analysis.Variable):
+    def __init__(self,variable):
+        Analysis.Variable.__init__(self,'abs_%s'%variable.name,variable.type)
+        self.variable=variable
+        
+    def calculate(self):
+        value=self.variable.value()
+        result=None
+        if type(value)==list:
+            result=list()
+            for val in value:
+                result.append(abs(val))
+        else:
+            result=abs(value)
+        return result
+
 ## Returns an element of a list variable, None if out of range error is encountered
 class ListElementVariable(Analysis.Variable):
     def __init__(self,var,jidx):
@@ -148,6 +165,17 @@ class ListElementVariable(Analysis.Variable):
         val=self.var.value()
         if self.jidx>=len(val): return None
         return val[self.jidx]
+
+## Returns the length of a list froma variable
+class ListLengthVariable(Analysis.Variable):
+    def __init__(self,var):
+        Analysis.Variable.__init__(self,'%s_length'%(var.name),int)
+
+        self.var=var
+        
+    def calculate(self):
+        val=self.var.value()
+        return len(val)
 
         
 ## Sum of different variables
