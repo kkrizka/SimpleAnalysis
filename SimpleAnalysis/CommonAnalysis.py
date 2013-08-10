@@ -144,6 +144,7 @@ class AbsoluteVariable(Analysis.Variable):
         
     def calculate(self):
         value=self.variable.value()
+        if value==None: return None
         result=None
         if type(value)==list:
             result=list()
