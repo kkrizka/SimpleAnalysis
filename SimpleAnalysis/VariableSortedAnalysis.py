@@ -77,6 +77,11 @@ class VariableSortedAnalysis(Analysis.Analysis):
             h.SetLineStyle(category.linestyle)
         if hasattr(category,'fillcolor'):
             h.SetFillColor(category.fillcolor)
+        if hasattr(category,'options'):
+            h.opt=category.options
+        else:
+            h.opt='HIST'
+
         variable.categories[category.name]=h
 
     def run_event(self):
@@ -147,7 +152,9 @@ class VariableSortedAnalysis(Analysis.Analysis):
             # Add histograms
             for h in hists:
                 if self.norm_mode=='1': h.Scale(1./h.Integral())
-                variable.hist.Add(h)
+                h.Sumw2()
+                print h.opt
+                variable.hist.Add(h,h.opt)
 
             ## Draw it
             opts=''
