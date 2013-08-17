@@ -4,6 +4,8 @@ from SimpleAnalysis import Category
 
 from ROOT import *
 
+from array import array
+
 # This is a general class that crates 2D histograms, one per category that is
 # based on some selection. No distinction is made between the different event
 # files. They are all stored in the same histogram.
@@ -37,6 +39,8 @@ from ROOT import *
 #  nbins: Number of bins in histogram
 #  minval: Minimum value in histogram
 #  maxval: Maximum value in histogram
+#  bins: A list specifying the variable binning argument to ROOT histograms. If set,
+#        nbins/minval/maxval are ignored.
 #
 
 class Variable2DSortedAnalysis(Analysis.Analysis):
@@ -76,14 +80,22 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         bigtitle=''
         if self.bigtitle!=None: bigtitle=' and %s'%self.bigtitle
 
+        # Determine the binning method for the two variables
+        bins=[]
+        if hasattr(var1,'bins'):
+            bins+=[len(var1.bins)-1,array('f',var1.bins)]
+        else:
+            bins+=[var1.nbins,var1.minval,var1.maxval]
+
+        if hasattr(var2,'bins'):
+            bins+=[len(var2.bins)-1,array('f',var2.bins)]
+        else:
+            bins+=[var2.nbins,var2.minval,var2.maxval]
+
+        # Make histogram
         h=TH2F("%s_%svs%s%s"%(category.name,var1.name,var2.name,suffix),
                '%s%s'%(category.title,bigtitle),
-               var1.nbins,
-               var1.minval,
-               var1.maxval,
-               var2.nbins,
-               var2.minval,
-               var2.maxval)
+               *bins)
         h.var1=var1
         h.var2=var2
         h.category=category.name
