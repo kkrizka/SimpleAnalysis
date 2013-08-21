@@ -4,13 +4,9 @@ import OutputFactory
 from ROOT import *
 import inspect
 
-# This is a general class to compare variables from a set of simulated events.
-# It loops over all of the events that pass a cut and makes a histogram of
-# all defined variables. The different histograms are drawn on the same plot
-# and are scaled to have an area of 1.
-#
-# No distinction is made between the different event files. They are all
-# stored in the same histogram.
+# This is a general class to compare variables from a set of events. It loops
+# over all of the events that pass a cut and makes a histogram of
+# all defined variables. The different histograms are drawn on the same plot.
 #
 # If a variable returns a list of numbers, all of them are added to a histogram
 # invididually.
@@ -30,8 +26,8 @@ import inspect
 #
 # The following member attributes of each variable are used to configure its
 # appearance:
-#  color: The color use to draw it
-#  line: corresponds to the line style of the histogram
+#  linecolor: The color use to draw it
+#  linestyle: corresponds to the line style of the histogram
 #  title: The title to put in the legend for it
 #
 # Other member attributes are:
@@ -65,10 +61,10 @@ class VariableComparatorAnalysis(Analysis.Analysis):
                    self.nbins,
                    self.minval,
                    self.maxval)
-            if hasattr(variable,'color'):
-                h.SetLineColor(variable.color)
-            if hasattr(variable,'line'):
-                h.SetLineStyle(variable.line)
+            if hasattr(variable,'linecolor'):
+                h.SetLineColor(variable.linecolor)
+            if hasattr(variable,'linestyle'):
+                h.SetLineStyle(variable.linestyle)
 
             self.histograms.append(h)
 
