@@ -2,7 +2,7 @@ import Analysis
 import OutputFactory
 
 from ROOT import *
-import inspect
+import os.path
 
 # This is a general class to compare variables from a set of events. It loops
 # over all of the events that pass a cut and makes a histogram of
@@ -87,10 +87,14 @@ class VariableComparatorAnalysis(Analysis.Analysis):
                     h.Fill(value)
 
     def deinit(self):
+        # Prepare the output
+        if self.output_type=='root':
+            f=OutputFactory.getTFile()
+
         # Prepare stack
         hs=THStack()
         hs.SetTitle(self.bigtitle)
-        hs.SetName(self.name)
+        hs.SetName(os.path.basename(self.name))
 
         for hist in self.histograms:
             if self.norm_mode=='1' and hist.Integral()!=0:
@@ -122,8 +126,6 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         elif self.output_type=='eps':
             c.SaveAs("%s.eps"%outfileName)
         elif self.output_type=='root':
-            f=OutputFactory.getTFile()
-            f.cd()
             hs.Write()
 
         # Dump some stats, while we are there..
