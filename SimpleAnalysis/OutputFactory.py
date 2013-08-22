@@ -4,6 +4,7 @@ import glob
 import datetime
 import atexit
 
+default_name='output.root' # Default filename
 _name=None # Name where the results directory will be.
 _resultsdir=None # The path to the results directory, when created.
 _tfiles={} # A dictionary of opened TFiles. The key is the full path to the ROOT file.
@@ -33,8 +34,10 @@ def results():
 
 # Returns a pointer to a TFile named "name" inside the results directory
 #  name - The name of the output ROOT file. 'output.root' by default.
-def getTFile(name='output.root'):
-    global _tfiles
+def getTFile(name=None):
+    global _tfiles,default_name
+
+    if name==None: name=default_name
 
     path=os.path.join(results(),name)
     if path in _tfiles:
