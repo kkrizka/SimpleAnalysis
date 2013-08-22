@@ -96,6 +96,7 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         h=TH2F("%s_%svs%s%s"%(category.name,var1.name,var2.name,suffix),
                '%s%s'%(category.title,bigtitle),
                *bins)
+        h.name2="%s_%svs%s%s"%(category.name,var2.name,var1.name,suffix)
         h.var1=var1
         h.var2=var2
         h.category=category.name
@@ -166,14 +167,18 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
             c.Update()
 
             # Print it out
-            outfileName="%s"%(h.GetName())
-            outfileName=outfileName.replace('/','-')
+            outfileName=h.GetName().replace('/','-')
+            outfileName2=h.name2.replace('/','-')
             if self.output_type=='png':
                 c.SaveAs("%s.png"%outfileName)
+                c.SaveAs("%s.png"%outfileName2)
             elif self.output_type=='eps':
                 c.SaveAs("%s.eps"%outfileName)
+                c.SaveAs("%s.eps"%outfileName2)
             elif self.output_type=='root':
                 f=OutputFactory.getTFile()
                 f.cd()
                 h.Write()
+                h2=h.Clone(h.name2)
+                h2.Write()
 
