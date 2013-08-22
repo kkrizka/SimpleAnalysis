@@ -361,12 +361,13 @@ class Analysis:
                 maxval=cut.variable.maxval if cut.variable!=None else 1.
                 nbins=cut.variable.nbins if cut.variable!=None else 1
                 title=cut.variable.title if cut.variable!=None and hasattr(cut.variable,'title') else ''
+                xtitle='%s (%s)'%(title,cut.variable.units) if cut.variable!=None and hasattr(cut.variable,'units') else title
                 cut.passed=TH1D('cut%02d_passed'%cutidx,'',
                                 nbins,minval,maxval)
                 cut.all=TH1D('cut%02d_all'%cutidx,'',
                                 nbins,minval,maxval)
-                cut.passed.SetXTitle(title)
-                cut.all.SetXTitle(title)
+                cut.passed.SetXTitle(xtitle)
+                cut.all.SetXTitle(xtitle)
                 cut.count=0
 
             # Open the file
