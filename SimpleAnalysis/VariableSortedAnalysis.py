@@ -20,11 +20,13 @@ from ROOT import *
 #
 # If a variable to be plotted returns a list of numbers, all of them are added to
 # a histogram invididually. The category variable can return a list of the same
-# size to sort each entry into a different category.
+# size to sort each entry into a different category. To add weighting to a variable,
+# just add it to the variables list as a tuple (variable,weight).
 #
 # The following attributes can be set to control the logic of the analysis:
 #  bigtitle: The title to put on the overall graph
 #  suffix: Text to append to the end of the saved histograms as varname_suffix (None by default)
+#  prefix: Text to append to the beginning of the saved histograms as prefix_varname (None by default)
 #  output_type: Type of output ('png', 'eps' or 'root')
 #  norm_mode: How to normalize individual histograms ('none' or '1')
 #  logy: Whether to log the y axis
@@ -48,6 +50,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
         self.variables=[]
         self.bigtitle=''
         self.suffix=None
+        self.prefix=None
         self.norm_mode='none'        
         self.output_type='png'
         self.logy=False
@@ -66,7 +69,10 @@ class VariableSortedAnalysis(Analysis.Analysis):
                 self.book_category(variable,category)
 
     def book_category(self,variable,category):
-        h=TH1F("%s_%s"%(variable.name,category.name),
+        suffix='' if self.suffix==None else '_%s'%self.suffix
+        prefix='' if self.prefix==None else '%s_'%self.prefix
+
+        h=TH1F("%s_%s_%s_%s"%(prefix,variable.name,category.name,suffix),
                category.title,
                variable.nbins,
                variable.minval,
@@ -123,8 +129,8 @@ class VariableSortedAnalysis(Analysis.Analysis):
                     h.Fill(value)
 
     def deinit(self):
-        suffix=''
-        if self.suffix!=None: suffix='_%s'%self.suffix
+        suffix='' if self.suffix==None else '_%s'%self.suffix
+        prefix='' if self.prefix==None else '%s_'%self.prefix
 
         if self.output_type=='root':
             f=OutputFactory.getTFile()
@@ -139,7 +145,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
             c.Clear()
 
             ## Create a stacked histogram
-            variable.hist=THStack(variable.name+suffix,self.bigtitle)
+            variable.hist=THStack(prefix+variable.name+suffix,self.bigtitle)
 
             # Make a list of histograms
             hists=[]
@@ -153,7 +159,6 @@ class VariableSortedAnalysis(Analysis.Analysis):
             for h in hists:
                 if self.norm_mode=='1': h.Scale(1./h.Integral())
                 h.Sumw2()
-                print h.opt
                 variable.hist.Add(h,h.opt)
 
             ## Draw it
@@ -173,7 +178,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
             c.Update()
 
             # Print it out
-            outfileName="%s-%s"%(self.name,variable.name)
+            outfileName="%s-%s"%(self.name,variable.hist.GetName())
             outfileName=outfileName.replace('/','-')
             if self.output_type=='png':
                 c.SaveAs("%s.png"%outfileName)
