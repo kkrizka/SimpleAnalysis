@@ -75,8 +75,6 @@ class VariableCut(Analysis.Cut):
     ## Cut method
     def cut(self):
         value=self.variable.value()
-        if type(value)==tuple:
-            value=value[0]
         if(value<self.minVal):
             return True
         return False
@@ -133,7 +131,7 @@ class ConstantVariable(Analysis.Variable):
         Analysis.Variable.__init__(self,'constant_%s'%str(x),type)
         self.x=x
         
-    def calculate(self):
+    def value(self):
         return self.x
 
 ## Returns a the absolute value
@@ -142,7 +140,7 @@ class AbsoluteVariable(Analysis.Variable):
         Analysis.Variable.__init__(self,'abs_%s'%variable.name,variable.type)
         self.variable=variable
         
-    def calculate(self):
+    def value(self):
         value=self.variable.value()
         if value==None: return None
         result=None
@@ -162,7 +160,7 @@ class ListElementVariable(Analysis.Variable):
         self.var=var
         self.jidx=jidx
         
-    def calculate(self):
+    def value(self):
         val=self.var.value()
         if val==None: return None
         if self.jidx>=len(val): return None
@@ -175,7 +173,7 @@ class ListLengthVariable(Analysis.Variable):
 
         self.var=var
         
-    def calculate(self):
+    def value(self):
         val=self.var.value()
         return len(val)
 
@@ -186,7 +184,7 @@ class SumVariable(Analysis.Variable):
         Analysis.Variable.__init__(self,'sum_%s'%str(variables),variables[0].type)
         self.variables=variables
         
-    def calculate(self):
+    def value(self):
         value=0
         for variable in self.variables:
             value+=variable.value()
@@ -206,7 +204,7 @@ class ProductVariable(Analysis.Variable):
         Analysis.Variable.__init__(self,'product_%s'%str(variables),t)
         self.variables=variables
         
-    def calculate(self):
+    def value(self):
         value=1
         for variable in self.variables:
             value=self.multiply(value,variable.value())
@@ -217,9 +215,10 @@ class ProductVariable(Analysis.Variable):
         if type(value1)!=list and type(value2)!=list:
             return value1*value2
         if type(value1)!=list and type(value2)==list:
-            for i in range(len(value2)):
-                value2[i]*=value1
-            return value2
+            value1=[value1]*len(value2)
+            for i in range(len(value1)):
+                value1[i]*=value2[i]
+            return value1
         if type(value1)==list and type(value2)!=list:
             for i in range(len(value1)):
                 value1[i]*=value2
@@ -235,7 +234,7 @@ class RawBranchVariable(Analysis.Variable):
         Analysis.Variable.__init__(self,branch_name,type)
         self.branch_name=branch_name
         
-    def calculate(self):
+    def value(self):
         if type(self.type)==tuple and self.type[0]==list:
             return list(self.event.__getattr__(self.branch_name))
         elif self.type==str:
@@ -251,7 +250,7 @@ class FormulaVariable(Analysis.Variable):
         self.formula=None
         self.lasttree=None
         
-    def calculate(self):
+    def value(self):
         if self.formula==None or self.lasttree!=self.event.raw:
             self.event.raw.SetBranchStatus('*',1)
             self.formula=TTreeFormula(self.expr,self.expr,self.event.raw)

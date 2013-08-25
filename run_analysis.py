@@ -14,6 +14,7 @@ import optparse
 import tempfile
 import urlparse
 import struct
+import itertools
 
 ##
 # This is a general script to run the analysis on a set of simulated events.
@@ -37,6 +38,8 @@ options_parser.add_option("-t", "--test", dest="test", action="store_true",
                           help="Test mode. Set results directory to /tmp and loop over only 10 events. Both can be overriden.", metavar="TEST")
 options_parser.add_option("-D", "", dest="define", action="append",
                           help="Define some extra input parameters that can be parsed by analysis scripts.", metavar="KEY[=VALUE]")
+options_parser.add_option("-l", "--loop", dest="loop",
+                          help="A loop file determing what configuration analyses should be tried.", metavar="LOOP")
 
 (options, args) = options_parser.parse_args()
 
@@ -72,6 +75,32 @@ if options.define!=None:
         else:
             defines[parts[0]]=parts[1]
 
+## Determine what to loop over
+looplists=[]
+loopkeys=[]
+if options.loop!=None:
+    try:
+        fh=open(options.loop)
+    except IOError:
+        print 'Error: Could not open loop configuration!'
+        sys.exit(-1)
+
+    key=None
+    for line in fh:
+        line=line.strip()
+        if line=='': # Loop list ended
+            key=None
+            continue
+        if key==None: # New loop configuration
+            key=line
+            loopkeys.append(key)
+            looplists.append([])
+            continue
+        looplists[-1].append(line)
+    looplists=list(itertools.product(*looplists))
+if len(looplists)==0:
+    looplists.append('')
+
 # Set the suffix for the OutputFactory, if required
 OutputFactory.setResults(options.output)
 
@@ -79,11 +108,28 @@ OutputFactory.setResults(options.output)
 pypath=os.path.dirname(os.path.abspath(pyfile))
 sys.path.append(pypath)
 
-execfile(pyfile) # Load the config file
+## Manager
+manager=Analysis.Manager()
+manager.nevents=options.nevents
+manager.name=pyfile[:-3]
 
-# Autoconfigure some parts of the analysis
-analysis.name=pyfile[:-3]
-analysis.nevents=options.nevents
+# Load the analysis script
+for i in range(max(len(looplists),1)):
+    # Globals used inside analysis setup script
+    if len(looplists)>0:
+        defines.update(dict(zip(loopkeys,looplists[i])))
+    eventfiles=[]
+    cuts=[]
+    loader=i==0
+    analysis=None
+    
+    execfile(pyfile) # Load the config file
+
+    # Save the analysis to the manager
+    manager.cuts=cuts
+    manager.eventfiles=eventfiles
+    manager.analysis.append(analysis)
+    analysis.name=manager.name
 
 # Autoconfigure event files passed through the command line
 if options.input==None: options.input=[]
@@ -119,15 +165,14 @@ for input in options.input:
             isROOT=False
 
     if isROOT:
-        print 'isROOT'
         evset=Analysis.EventFile(inpath,intree)
-        analysis.eventfiles.append(evset)
+        manager.eventfiles.append(evset)
     else:
         fh=open(inpath)
         for inpath in fh:
             inpath=inpath.strip()
             if inpath.startswith('#'): continue
             evset=Analysis.EventFile(inpath,intree)
-            analysis.eventfiles.append(evset)
+            manager.eventfiles.append(evset)
 
-analysis.run()
+manager.run()

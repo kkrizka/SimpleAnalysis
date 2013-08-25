@@ -1,13 +1,11 @@
 from ROOT import *
 
-import VariableFactory
 import OutputFactory
 import PointerFactory
 import Timing
 
 ##
-# This is a general class for calculating a variable for an event. It can also store
-# the aesthetic information that will be used when plotting.
+# This is a general class for calculating a variable for an event. 
 #
 # It is also possible to define a variable weight, through the weight attribute. This
 # weight is then added to the returned value by formatting it as a tuple. The weight
@@ -20,10 +18,6 @@ import Timing
 # are appended to the values as a second entry in the tuple. The first entry is the
 # value.
 #
-# Variable values can be automatically cached, which is useful if they are used 
-# several times at different parts of the analysis. Only the last value is cached 
-# though.
-#
 # Each variable is required to have set the following properties:
 # - name: The name of the variable. Taken to be the class name by default
 # - type: The type of the variable. Taken to be float by default.
@@ -35,6 +29,8 @@ import Timing
 # - event: Entry in the TTree currently being processed
 # - eventfile: Information about the event file being processed
 class Variable:
+    event=None
+    eventfile=None
     # Arguments:
     # - name: The name that will be used to identify this variable
     #         throughout the execution and outputs
@@ -47,46 +43,32 @@ class Variable:
         self.type=type
         self.weight=None
 
-        # setup the cache
-        self.cached_value=None
-        self.dirty_bit=True
-
-        self.event=None
-        self.eventfile=None
-
-    # The value returned by this variable, with cache lookup.
+    # The value returned by this variable. All subclasses need to implement this.
     def value(self):
-        if self.dirty_bit:
-            self.cached_value=self.calculate()
-            self.dirty_bit=False
-
-        return self.cached_value;
+        pass
 
     # The value of this variable, along with the weight.
     def wvalue(self):
         values=self.value()
+        if values==None: return None
+        
         # Apply weighting, if necessary
-        if self.weight!=None and values!=None:
+        wvalues=None
+        if self.weight!=None:
             weights=self.weight.value()
             is_weights_list=(type(weights)==list)
             if type(values)==list: # Apply weight item-by-item
+                wvalues=[]
                 for idx in range(len(values)):
                     value=values[idx]
-                    if type(cached_value)!=tuple: # No weight applied yet
-                        if is_weights_list:
-                            values[idx]=(value,weights[idx])
-                        else:
-                            values[idx]=(value,weights)
+                    if is_weights_list:
+                        wvalues.append((value,weights[idx]))
+                    else:
+                        wvalues.append((value,weights))
             else:
-                values=(values,weights)
-            
+                wvalues=(values,weights)
 
-        return values
-
-    # All subclasses that wish to cache their results should implement this
-    # instead of value(). It works the same way as value().
-    def calculate():
-        return 0
+        return wvalues
 
 ##
 ## This is a general class that can be used to implement cuts on events
@@ -269,7 +251,6 @@ class Event:
 
 ## This is just a general class for doing analysis. It has the following
 ## functionality:
-## - Loops over events inside different event files
 ## - Calls a function
 ##   - Before anything is run (init)
 ##   - When a new event file is opened (init_eventfile)
@@ -280,14 +261,7 @@ class Event:
 ## Everything is run when the run() function is called.
 ##
 ## It is also possible to add "cuts", using the Cut classes. When these cuts are
-## added, then only events that pass them are processed by the event function. The
-## cutflow information is stored inside a file called cutflow-fileidx.root. The fileidx
-## is replaced by the number of the file being processed. The information is stored in the
-## form of histograms. There are two histograms for each cut: cutidx_passed and cutidx_all.
-## The idx is replaced by the number of the cut in the list. The two histograms correspond
-## to the passed events and all events. The values filled into the histogram are determined by
-## Cut.variable attribute. This should have attributes minval,maxval and nbins to dictate
-## the binning of the histogram.
+## added, then only events that pass them are processed by the event function.
 ##
 ## The following are some useful member parameters that are available to perform
 ## analysis when each of the triggers are called.
@@ -295,17 +269,10 @@ class Event:
 ##  eventfile - The event file being processed
 ##
 ## Internal parameters that configure this class are:
-##  nevents - Causes the analysis to process only the first nevents events from
-##            each event file. Set to None to go over all of them. (None by 
-##            default)
-##  eventfiles - A list of EventFile objects that represent the event files
-##               to be looped over.
 ##  cuts - A list of Cut objects that represent the cuts that will be
 ##         applied
 class Analysis:
     def __init__(self):
-        self.nevents=None
-        self.eventfiles=[]
         self.cuts=[]
 
         self.store_list=[]
@@ -326,13 +293,86 @@ class Analysis:
         pass
     
     # Called after an event file is completly looped over
-    # The eventfile instance now contains the effective cross-section.
     def deinit_eventfile(self):
         pass
 
     # Called after stuff is done runnning
     def deinit(self):
         pass
+            
+    # Helps to store stuff during the run of the analysis, so the things are
+    # not being deleted.
+    def store(self,var):
+        self.store_list.append(var)
+
+## This is a class for managing an analysis. It does the cutflow, loading of events and calling the
+## appropriate analysis instances. This class is instiated automatically by the run_analysis.py
+## script and should never be used otherwise
+##
+## It is also possible to add "cuts", using the Cut classes. When these cuts are
+## added, then only events that pass them are processed by the event function. The
+## cutflow information is stored inside a file called cutflow-fileidx.root. The fileidx
+## is replaced by the number of the file being processed. The information is stored in the
+## form of histograms. There are two histograms for each cut: cutidx_passed and cutidx_all.
+## The idx is replaced by the number of the cut in the list. The two histograms correspond
+## to the passed events and all events. The values filled into the histogram are determined by
+## Cut.variable attribute. This should have attributes minval,maxval and nbins to dictate
+## the binning of the histogram.
+##
+## In addition, the "cuts" attribute of the Analysis instance is also queried to determine if
+## it should be run on the event.
+##
+## Internal parameters that configure this class are:
+##  nevents - Causes the analysis to process only the first nevents events from
+##            each event file. Set to None to go over all of them. (None by 
+##            default)
+##  eventfiles - A list of EventFile objects that represent the event files
+##               to be looped over.
+##  cuts - A list of Cut objects that represent the cuts that will be
+##         applied
+##  analysis - A list of Analysis object to execute.
+class Manager:
+    def __init__(self):
+        self.nevents=None
+        self.eventfiles=[]
+        self.cuts=[]
+        self.analysis=[]
+
+        self.event=None
+        self.eventfile=None
+
+    # Called before stuff is run
+    def init(self):
+        for analysis in self.analysis:
+            analysis.init()
+
+    # Called before an event file is looped over
+    def init_eventfile(self):
+        for analysis in self.analysis:
+            analysis.eventfile=self.eventfile
+            analysis.init_eventfile()
+
+    # Called for each event that passes the cuts
+    def run_event(self):
+        for analysis in self.analysis:
+            analysis.event=self.event
+            docut=False
+            for cut in analysis.cuts:
+                if cut.cut()!=cut.invert:
+                    docut=True
+                    break
+            if docut: continue
+            analysis.run_event()
+    
+    # Called after an event file is completly looped over
+    def deinit_eventfile(self):
+        for analysis in self.analysis:
+            analysis.deinit_eventfile()
+
+    # Called after stuff is done runnning
+    def deinit(self):
+        for analysis in self.analysis:
+            analysis.deinit()
 
     # This takes care of running everything. After you setup the
     # configuration of your analysis, run this!
@@ -344,8 +384,9 @@ class Analysis:
 
         for eventfileidx in range(len(self.eventfiles)):
             eventfile=self.eventfiles[eventfileidx]
-            VariableFactory.setEventFile(eventfile)
-            VariableFactory.setEvent(None)
+            Variable.eventfile=eventfile
+            Variable.event=None
+            
             self.eventfile=eventfile
 
             # Initialzie the cutflow information for this event
@@ -412,7 +453,7 @@ class Analysis:
 
                 self.event=eventfile.event(evt_idx)
                 self.event.idx=evt_idx
-                VariableFactory.setEvent(self.event)
+                Variable.event=self.event
 
                 print "=============================="
                 print " Event: %d                    "%self.event.idx
@@ -423,20 +464,18 @@ class Analysis:
                     cut=self.cuts[cidx]
                     cut.event=self.event
 
-                    values=cut.variable.wvalue() if cut.variable!=None else 0.
+                    values=cut.variable.value() if cut.variable!=None else 0.
                     if(type(values)!=list): values=[values]
                     for value in values:
                         if value==None: continue
-                        if type(value)!=tuple: value=(value,)
-                        cut.all.Fill(*value)
+                        cut.all.Fill(value)
                     
                     if cut.cut()!=cut.invert:
                         docut=True
                         break
                     for value in values:
                         if value==None: continue
-                        if type(value)!=tuple: value=(value,)
-                        cut.passed.Fill(*value)
+                        cut.passed.Fill(value)
                         cut.count+=1
 
                         
@@ -469,83 +508,3 @@ class Analysis:
         print '== End Statistics =='
         print 'Average Time Per Event: %s'%str(timing.average())
             
-    # Helps to store stuff during the run of the analysis, so the things are
-    # not being deleted.
-    def store(self,var):
-        self.store_list.append(var)
-
-## This is just a general class for running a script over many ROOT files. It has the following
-## functionality:
-## - Calls a function
-##   - Before anything is run (init)
-##   - Once for each event file (run_eventfile)
-##   - After everything is completed (deinit)
-##
-## Everything is run when the run() function is called.
-##
-## The following are some useful member parameters that are available to perform
-## analysis when each of the triggers are called.
-##  eventfile - The event file being processed
-##
-## Internal parameters that configure this class are:
-##  nevents - Causes the analysis to process only the first nevents events from
-##            each event file. Set to None to go over all of them. (None by 
-##            default)
-##  eventfiles - A list of EventFile objects that represent the event files
-##               to be looped over.
-class Script:
-    def __init__(self):
-        self.nevents=None
-        self.eventfiles=[]
-        self.cuts=[]
-
-        self.store_list=[]
-
-        self.event=None
-        self.eventfile=None
-
-    # Called before stuff is run
-    def init(self):
-        pass
-
-    # Called for each event file
-    def run_eventfile(self):
-        pass
-
-    # Called after stuff is done runnning
-    def deinit(self):
-        pass
-
-    # This takes care of running everything. After you setup the
-    # configuration of your analysis, run this!
-    def run(self):
-        OutputFactory.setOutputName(self.name)
-        self.init()
-
-        for eventfile in self.eventfiles:
-            VariableFactory.setEventFile(eventfile)
-            VariableFactory.setEvent(None)
-            self.eventfile=eventfile
-
-            # Open the file
-            eventfile.load_tree()
-            if eventfile.tree==None:
-                print "ERROR: Tree not found!"
-                continue
-            
-            gROOT.cd()
-
-            print "********************************************************************************"
-            print "* Event File: %s   Event Tree: %s       "%(eventfile.path,eventfile.treeName)
-            print "* Number of Events: %d                  "%eventfile.tree.GetEntries()
-            print "********************************************************************************"
-            self.run_eventfile()
-                        
-            eventfile.close()
-
-        self.deinit()
-
-    # Helps to store stuff during the run of the analysis, so the things are
-    # not being deleted.
-    def store(self,var):
-        self.store_list.append(var)
