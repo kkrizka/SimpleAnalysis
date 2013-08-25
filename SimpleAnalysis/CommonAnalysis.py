@@ -164,6 +164,7 @@ class ListElementVariable(Analysis.Variable):
         
     def calculate(self):
         val=self.var.value()
+        if val==None: return None
         if self.jidx>=len(val): return None
         return val[self.jidx]
 
