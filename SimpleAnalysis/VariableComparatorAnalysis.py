@@ -116,7 +116,7 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         if hs.GetHists()==None: return
 
         # Draw
-        c=TCanvas('c1','c1')
+        c=TCanvas()
         if self.logy:
             c.SetLogy(True)
 
@@ -146,3 +146,4 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         print "Statistics:"
         for hist in self.histograms:
             print "\t%s\t%f\t%f"%(hist.GetTitle(),hist.GetMean(),hist.GetRMS())
+        c.Close()
