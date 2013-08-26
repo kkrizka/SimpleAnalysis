@@ -15,6 +15,8 @@ import os.path
 #  bigtitle: The title to put on the overall graph
 #  norm_mode: The normalization mode ('1' or 'none') for the different histograms.
 #  output_type: Type of output ('png', 'eps' or 'root')
+#  suffix: Text to append to the end of the saved histograms as varname_suffix (None by default)
+#  prefix: Text to append to the beginning of the saved histograms as prefix_varname (None by default)
 #
 # Axis relevant variables:
 #  title: The title to put on the x-axis
@@ -42,6 +44,8 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         self.bigtitle=''
         self.norm_mode='none'
         self.output_type='png'
+        self.suffix=None
+        self.prefix=None
 
         
         self.title=''
@@ -54,9 +58,12 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         self.histograms=[]
 
     def init(self):
+        suffix='' if self.suffix==None else '_%s'%self.suffix
+        prefix='' if self.prefix==None else '%s_'%self.prefix
+
         # Book histograms for all the variables
         for variable in self.variables:
-            h=TH1F("%s_%d"%(variable.name,id(variable)),
+            h=TH1F("%s%s_%d%s"%(prefix,variable.name,id(variable),suffix),
                    variable.title,
                    self.nbins,
                    self.minval,
@@ -87,6 +94,11 @@ class VariableComparatorAnalysis(Analysis.Analysis):
                     h.Fill(value)
 
     def deinit(self):
+        # Name to use to store things
+        suffix='' if self.suffix==None else '_%s'%self.suffix
+        prefix='' if self.prefix==None else '%s_'%self.prefix
+        name='%s%s%s'%(prefix,os.path.basename(self.name),suffix)
+        
         # Prepare the output
         if self.output_type=='root':
             f=OutputFactory.getTFile()
@@ -94,12 +106,14 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         # Prepare stack
         hs=THStack()
         hs.SetTitle(self.bigtitle)
-        hs.SetName(os.path.basename(self.name))
+        hs.SetName(name)
 
         for hist in self.histograms:
-            if self.norm_mode=='1' and hist.Integral()!=0:
+            if hist.Integral()==0: continue
+            if self.norm_mode=='1':
                 hist.Scale(1./hist.Integral())
             hs.Add(hist)
+        if hs.GetHists()==None: return
 
         # Draw
         c=TCanvas('c1','c1')
@@ -119,7 +133,7 @@ class VariableComparatorAnalysis(Analysis.Analysis):
         c.Update()
 
         # Print it out
-        outfileName="%s"%(self.name)
+        outfileName="%s"%(name)
         outfileName=outfileName.replace('/','-')
         if self.output_type=='png':
             c.SaveAs("%s.png"%outfileName)
