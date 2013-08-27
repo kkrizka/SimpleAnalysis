@@ -63,6 +63,12 @@ class CachedVariable(Analysis.Variable):
         self.variable.cached_eventfile=None
         self.variable.cached_eventidx=None
 
+    # Access to members of this variable
+    def __getattr__(self,attr):
+        if hasattr(self.variable,attr):
+            return getattr(self.variable,attr)
+        raise AttributeError
+
     # The value returned by this variable, with cache lookup.
     def value(self):
         if self.eventfile.eventidx!=self.variable.cached_eventidx or self.eventfile!=self.variable.cached_eventfile:
