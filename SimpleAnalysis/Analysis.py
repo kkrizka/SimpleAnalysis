@@ -358,6 +358,7 @@ class Manager:
             analysis.event=self.event
             docut=False
             for cut in analysis.cuts:
+                cut.event=self.event
                 if cut.cut()!=cut.invert:
                     docut=True
                     break
