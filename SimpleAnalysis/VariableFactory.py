@@ -47,6 +47,11 @@ class CachedVariable(Analysis.Variable):
         if key not in _cache:
             _cache[key]=variable(*args)
 
+            # setup the cache
+            _cache[key].cached_value=None
+            _cache[key].cached_eventfile=None
+            _cache[key].cached_eventidx=None
+
             # Set the extra keyword args
             for k,v in kwargs.items():
                 v=kwargs[k]
@@ -58,10 +63,6 @@ class CachedVariable(Analysis.Variable):
         for k,v in allargs.items():
             setattr(self,k,v)
 
-        # setup the cache
-        self.variable.cached_value=None
-        self.variable.cached_eventfile=None
-        self.variable.cached_eventidx=None
 
     # Access to members of this variable
     def __getattr__(self,attr):
