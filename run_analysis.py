@@ -38,7 +38,7 @@ options_parser.add_option("-t", "--test", dest="test", action="store_true",
                           help="Test mode. Set results directory to /tmp and loop over only 10 events. Both can be overriden.", metavar="TEST")
 options_parser.add_option("-D", "", dest="define", action="append",
                           help="Define some extra input parameters that can be parsed by analysis scripts.", metavar="KEY[=VALUE]")
-options_parser.add_option("-l", "--loop", dest="loop",
+options_parser.add_option("-l", "--loop", dest="loop",action="append",
                           help="A loop file determing what configuration analyses should be tried.", metavar="LOOP")
 
 (options, args) = options_parser.parse_args()
@@ -78,26 +78,28 @@ if options.define!=None:
 ## Determine what to loop over
 looplists=[]
 loopkeys=[]
-if options.loop!=None:
-    try:
-        fh=open(options.loop)
-    except IOError:
-        print 'Error: Could not open loop configuration!'
-        sys.exit(-1)
 
-    key=None
-    for line in fh:
-        line=line.strip()
-        if line=='': # Loop list ended
-            key=None
-            continue
-        if key==None: # New loop configuration
-            key=line
-            loopkeys.append(key)
-            looplists.append([])
-            continue
-        looplists[-1].append(line)
-    looplists=list(itertools.product(*looplists))
+if options.loop!=None:
+    for loop in options.loop:
+        try:
+            fh=open(loop)
+        except IOError:
+            print 'Error: Could not open loop configuration!'
+            sys.exit(-1)
+
+        key=None
+        for line in fh:
+            line=line.strip()
+            if line=='': # Loop list ended
+                key=None
+                continue
+            if key==None: # New loop configuration
+                key=line
+                loopkeys.append(key)
+                looplists.append([])
+                continue
+            looplists[-1].append(line)
+looplists=list(itertools.product(*looplists))
 if len(looplists)==0:
     looplists.append('')
 
