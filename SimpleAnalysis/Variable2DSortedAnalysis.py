@@ -83,12 +83,12 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         # Determine the binning method for the two variables
         bins=[]
         if hasattr(var1,'bins'):
-            bins+=[len(var1.bins)-1,array('f',var1.bins)]
+            bins+=[len(var1.bins)-1,array('d',var1.bins)]
         else:
             bins+=[var1.nbins,var1.minval,var1.maxval]
 
         if hasattr(var2,'bins'):
-            bins+=[len(var2.bins)-1,array('f',var2.bins)]
+            bins+=[len(var2.bins)-1,array('d',var2.bins)]
         else:
             bins+=[var2.nbins,var2.minval,var2.maxval]
 
