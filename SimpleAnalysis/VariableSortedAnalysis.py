@@ -30,6 +30,7 @@ from ROOT import *
 #  output_type: Type of output ('png', 'eps' or 'root')
 #  norm_mode: How to normalize individual histograms ('none' or '1')
 #  logy: Whether to log the y axis
+#  sort_graphs: Sort graphs by integral before adding them to THStack (default: False)
 #  stack: Whether to stack the histograms (True by default)
 #
 # For Variable objects, the following attributes should be set to configure the
@@ -53,6 +54,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
         self.prefix=None
         self.norm_mode='none'        
         self.output_type='png'
+        self.sort_graphs=False
         self.logy=False
         self.stack=True
 
@@ -123,10 +125,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
                 vcat=vcategory[j]
                 if vcat==None or vcat not in variable.categories: continue
                 h=variable.categories[vcat]
-                if type(value)==tuple:
-                    h.Fill(value[0],value[1])
-                else:
-                    h.Fill(value)
+                h.Fill(value[0],value[1])
 
     def deinit(self):
         suffix='' if self.suffix==None else '_%s'%self.suffix
@@ -153,7 +152,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
                 if h.Integral()==0: continue # ignore empty histograms
                 hists.append(h)
             if len(hists)==0: continue
-            hists=sorted(hists,key=lambda h: h.Integral())
+            if self.sort_graphs: hists=sorted(hists,key=lambda h: h.Integral())
 
             # Add histograms
             for h in hists:
