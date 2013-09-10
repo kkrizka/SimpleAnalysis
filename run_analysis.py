@@ -58,7 +58,7 @@ if not os.path.exists(pyfile):
 gROOT.SetStyle("Plain");
 gStyle.SetOptStat("");
 gStyle.SetPalette(1);
-TH1.StatOverflows(True)
+#TH1.StatOverflows(True)
 
 if options.output==None and options.test:
     options.output=tempfile.mkdtemp()
