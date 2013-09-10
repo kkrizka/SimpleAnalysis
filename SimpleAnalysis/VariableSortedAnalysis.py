@@ -148,7 +148,8 @@ class VariableSortedAnalysis(Analysis.Analysis):
 
             # Make a list of histograms
             hists=[]
-            for category,h in variable.categories.items():
+            for category in self.categories:
+                h=variable.categories[category.name]
                 if h.Integral()==0: continue # ignore empty histograms
                 hists.append(h)
             if len(hists)==0: continue
