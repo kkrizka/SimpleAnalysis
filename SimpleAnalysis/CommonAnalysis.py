@@ -155,16 +155,24 @@ class AbsoluteVariable(Analysis.Variable):
 ## Returns an element of a list variable, None if out of range error is encountered
 class ListElementVariable(Analysis.Variable):
     def __init__(self,var,jidx):
-        Analysis.Variable.__init__(self,'%s_%d'%(var.name,jidx),var.type[1])
+        thetype=var.type[1] if type(jidx)!=list else (list,var.type[1])
+        Analysis.Variable.__init__(self,'%s_%s'%(var.name,jidx),thetype)
 
         self.var=var
-        self.jidx=jidx
+        self.jidx=[jidx] if type(jidx)!=list else jidx
         
     def value(self):
         val=self.var.value()
         if val==None: return None
-        if self.jidx>=len(val): return None
-        return val[self.jidx]
+
+        result=[]
+        for jidx in self.jidx:
+            if jidx>=len(val):
+                print 'Warning: ListElementVariable index %d out of range!'%jdix
+                result.append(None)
+                continue
+            result.append(val[jidx])
+        return result[0] if len(result)==1 else result
 
 ## Returns the length of a list froma variable
 class ListLengthVariable(Analysis.Variable):
