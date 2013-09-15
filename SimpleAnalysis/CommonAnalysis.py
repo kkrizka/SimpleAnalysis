@@ -213,10 +213,10 @@ class ProductVariable(Analysis.Variable):
         self.variables=variables
         
     def value(self):
-        value=1
+        values=[]
         for variable in self.variables:
-            value=self.multiply(value,variable.value())
-        return value
+            values.append(variable.value())
+        return reduce(self.multiply,values)
 
 
     def multiply(self,value1,value2):
