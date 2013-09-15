@@ -27,7 +27,8 @@ from array import array
 #
 # The following attributes can be set to control the logic of the analysis:
 #  bigtitle: The title to put on each graph (default: None)
-#  suffix: A suffix to append at the end of the name (default: None)
+#  suffix: Text to append to the end of the saved histograms as varname_suffix (None by default)
+#  prefix: Text to append to the beginning of the saved histograms as prefix_varname (None by default)
 #  output_type: Type of output ('png', 'eps' or 'root')
 #  norm_mode: How to normalize individual histograms ('none' or '1')
 #  logz: Whether to log the z axis
@@ -53,11 +54,12 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         self.variables=[]
         self.bigtitle=None
         self.suffix=None
+        self.prefix=None
         self.norm_mode='none'        
         self.output_type='png'
         self.logz=False
 
-        self.histograms=[]
+        self.histograms={}
 
     def init(self):
         # Create a default category, if none exist
@@ -74,8 +76,8 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
                     self.book_category(category,var1,var2)
 
     def book_category(self,category,var1,var2):
-        suffix=''
-        if self.suffix!=None: suffix='_%s'%self.suffix
+        suffix='' if self.suffix==None else '_%s'%self.suffix
+        prefix='' if self.prefix==None else '%s_'%self.prefix
 
         bigtitle=''
         if self.bigtitle!=None: bigtitle=' and %s'%self.bigtitle
@@ -93,15 +95,19 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
             bins+=[var2.nbins,var2.minval,var2.maxval]
 
         # Make histogram
-        h=TH2F("%s_%svs%s%s"%(category.name,var1.name,var2.name,suffix),
+        h=TH2F("%s%s_%svs%s%s"%(prefix,category.name,var1.name,var2.name,suffix),
                '%s%s'%(category.title,bigtitle),
                *bins)
-        h.name2="%s_%svs%s%s"%(category.name,var2.name,var1.name,suffix)
+        h.name2="%s%s_%svs%s%s"%(prefix,category.name,var2.name,var1.name,suffix)
         h.var1=var1
         h.var2=var2
         h.category=category.name
 
-        self.histograms.append(h)
+        # Save to the histograms array
+        key=(var1,var2)
+        if key not in self.histograms:
+            self.histograms[key]={}
+        self.histograms[key][category.name]=h
 
     def run_event(self):
         if self.category!=None:
@@ -110,17 +116,13 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
             category='default'
         if category==None: return
 
-        for h in self.histograms:
-            # Get the value to fill the histogram with
-            values1=h.var1.wvalue()
+        for i1 in range(len(self.variables)-1):
+            # Prepare var1
+            var1=self.variables[i1]
+            values1=var1.wvalue()
             if values1==None: continue # Do not fill if no value returned
             if type(values1)!=list:
                 values1=[values1]
-
-            values2=h.var2.wvalue()
-            if values2==None: continue # Do not fill if no value returned
-            if type(values2)!=list:
-                values2=[values2]
 
             # Prepare a list of corresponding categories
             if type(category)!=list:
@@ -128,16 +130,28 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
             else:
                 vcategory=category
 
-            # Fill the histograms
-            for j in range(len(values1)):
-                val1=values1[j]
-                val2=values2[j]
-                vcat=vcategory[j]
-                if vcat==None or vcat!=h.category: continue
-                if type(val1)==tuple:
+            for i2 in range(i1+1,len(self.variables)):
+                var2=self.variables[i2]
+
+                # Prepare var2
+                values2=var2.wvalue()
+                if values2==None: continue # Do not fill if no value returned
+                if type(values2)!=list:
+                    values2=[values2]
+
+                # Key for this pair
+                key=(var1,var2)
+
+                hists=self.histograms[key]
+
+                # Fill the histograms
+                for j in range(len(values1)):
+                    val1=values1[j]
+                    val2=values2[j]
+                    vcat=vcategory[j]
+                    if vcat==None or vcat not in hists: continue
+                    h=hists[vcat]
                     h.Fill(val1[0],val2[0],val1[1])
-                else:
-                    h.Fill(val1,val2)
 
     def deinit(self):
         # Draw
@@ -145,24 +159,34 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         if self.logz:
             c.SetLogz(True)
 
-        for h in self.histograms:
+        # Turn the histogram list into a dictionary
+        histograms=[]
+        for key,hists in self.histograms.items():
+            for cat,h in hists.items():
+                histograms.append(h)
+
+        # Loop and save
+        for h in histograms:
             c.Clear()
 
+            # Skip empties
+            if h.Integral()==0.: continue
+            
             # Normalize histograms, if requested
             if self.norm_mode=='1':
-                if h.Integral()!=0: h.Scale(1./h.Integral())
+                h.Scale(1./h.Integral())
             
             h.Draw('COLZ')
 
             title1=h.var1.title
             if hasattr(h.var1,'units') and h.var1.units!=None:
                 title1+=' (%s)'%h.var1.units
-            h.GetXaxis().SetTitle(title1)
+            h.SetXTitle(title1)
 
             title2=h.var2.title
             if hasattr(h.var2,'units') and h.var2.units!=None:
                 title2+=' (%s)'%h.var2.units
-            h.GetYaxis().SetTitle(title2)
+            h.SetYTitle(title2)
 
             c.Update()
 
