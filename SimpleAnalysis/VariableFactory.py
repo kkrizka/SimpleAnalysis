@@ -86,17 +86,10 @@ class CachedVariable(Analysis.Variable):
         
         # Apply weighting, if necessary
         wvalues=None
-        weights= self.weight.value() if self.weight!=None else 1
+        weights=self.weight.value() if self.weight!=None else 1
 
-        is_weights_list=(type(weights)==list)
-        if type(values)==list: # Apply weight item-by-item
-            wvalues=[]
-            for idx in range(len(values)):
-                value=values[idx]
-                if is_weights_list:
-                    wvalues.append((value,weights[idx]))
-                else:
-                    wvalues.append((value,weights))
-        else:
-            wvalues=(values,weights)
-        return wvalues
+        values=[values] if type(values)!=list else values
+        weights=[weights]*len(values) if type(weights)!=list else weights
+
+        wvalues=zip(values,weights)
+        return wvalues[0] if len(wvalues)==1 else wvalues
