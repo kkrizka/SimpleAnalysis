@@ -42,6 +42,7 @@ from array import array
 #  maxval: Maximum value in histogram
 #  bins: A list specifying the variable binning argument to ROOT histograms. If set,
 #        nbins/minval/maxval are ignored.
+#  onlyaxis: make this only the 'x' or 'y' axis in correlations ('both' by default)
 #
 
 class Variable2DSortedAnalysis(Analysis.Analysis):
@@ -68,14 +69,23 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
             self.categories.append(category)    
 
         # Book histograms for all the variables
-        for i1 in range(len(self.variables)-1):
+        for i1 in range(len(self.variables)):
             var1=self.variables[i1]
-            for i2 in range(i1+1,len(self.variables)):
+            var1.onlyaxis='both' if not hasattr(var1,'onlyaxis') else var1.onlyaxis
+            for i2 in range(len(self.variables)):
+                if i1==i2: continue
+                
                 var2=self.variables[i2]
+                var2.onlyaxis='both' if not hasattr(var2,'onlyaxis') else var2.onlyaxis
                 for category in self.categories:
                     self.book_category(category,var1,var2)
 
     def book_category(self,category,var1,var2):
+        # Axis settings
+        if var1.onlyaxis==var2.onlyaxis and var1.onlyaxis!='both': return # Skip duplicates
+
+        if var1.onlyaxis not in ['x','both']: return # var1 is y-axis..
+        #
         suffix='' if self.suffix==None else '_%s'%self.suffix
         prefix='' if self.prefix==None else '%s_'%self.prefix
 
@@ -98,11 +108,10 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         h=TH2F("%s%s_%svs%s%s"%(prefix,category.name,var1.name,var2.name,suffix),
                '%s%s'%(category.title,bigtitle),
                *bins)
-        h.name2="%s%s_%svs%s%s"%(prefix,category.name,var2.name,var1.name,suffix)
         h.var1=var1
         h.var2=var2
         h.category=category.name
-
+        
         # Save to the histograms array
         key=(var1,var2)
         if key not in self.histograms:
@@ -140,19 +149,21 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
                     values2=[values2]
 
                 # Key for this pair
-                key=(var1,var2)
+                key12=(var1,var2)
+                key21=(var2,var1)
 
-                hists=self.histograms[key]
+                hists12=self.histograms[key12] if key12 in self.histograms else None
+                hists21=self.histograms[key21] if key21 in self.histograms else None
 
                 # Fill the histograms
                 for j in range(len(values1)):
                     val1=values1[j]
                     val2=values2[j]
                     vcat=vcategory[j]
-                    if vcat==None or vcat not in hists: continue
-                    h=hists[vcat]
-                    h.Fill(val1[0],val2[0],val1[1])
-
+                    if vcat==None: continue
+                    if hists12!=None and vcat in hists12: hists12[vcat].Fill(val1[0],val2[0],val1[1])
+                    if hists21!=None and vcat in hists21: hists21[vcat].Fill(val2[0],val1[0],val2[1])
+                    
     def deinit(self):
         # Draw
         c=TCanvas('c1','c1')
@@ -192,17 +203,12 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
 
             # Print it out
             outfileName=h.GetName().replace('/','-')
-            outfileName2=h.name2.replace('/','-')
             if self.output_type=='png':
                 c.SaveAs("%s.png"%outfileName)
-                c.SaveAs("%s.png"%outfileName2)
             elif self.output_type=='eps':
                 c.SaveAs("%s.eps"%outfileName)
-                c.SaveAs("%s.eps"%outfileName2)
             elif self.output_type=='root':
                 f=OutputFactory.getTFile()
                 f.cd()
                 h.Write()
-                h2=h.Clone(h.name2)
-                h2.Write()
 
