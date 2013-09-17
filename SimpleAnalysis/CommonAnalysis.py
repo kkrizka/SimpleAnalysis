@@ -168,7 +168,7 @@ class ListElementVariable(Analysis.Variable):
         result=[]
         for jidx in self.jidx:
             if jidx>=len(val):
-                print 'Warning: ListElementVariable index %d out of range!'%jdix
+                print 'Warning: ListElementVariable "%s" index %d out of range!'%(self.name,jidx)
                 result.append(None)
                 continue
             result.append(val[jidx])
