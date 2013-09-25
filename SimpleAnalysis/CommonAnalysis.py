@@ -75,6 +75,7 @@ class VariableCut(Analysis.Cut):
     ## Cut method
     def cut(self):
         value=self.variable.value()
+        if value==None: return True
         if(value<self.minVal):
             return True
         return False
@@ -263,5 +264,5 @@ class FormulaVariable(Analysis.Variable):
             self.event.raw.SetBranchStatus('*',1)
             self.formula=TTreeFormula(self.expr,self.expr,self.event.raw)
             self.lasttree=self.event.raw
-            
+
         return self.formula.EvalInstance()
