@@ -4,6 +4,8 @@ from SimpleAnalysis import Category
 
 from ROOT import *
 
+from array import array
+
 # This is a general class to compare variables for a set of simulated events,
 # but split into different categories based on some selection. No distinction
 # is made between the different event files. They are all  stored in the same
@@ -38,6 +40,8 @@ from ROOT import *
 #  title: The title to put on the x-axis
 #  units: The units to put on the x-axis of the plot. None means no units
 #  nbins: Number of bins in histogram
+#  bins: A list specifying the variable binning argument to ROOT histograms. If set,
+#        nbins/minval/maxval are ignored.
 #  minval: Minimum value in histogram
 #  maxval: Maximum value in histogram
 #
@@ -74,11 +78,17 @@ class VariableSortedAnalysis(Analysis.Analysis):
         suffix='' if self.suffix==None else '_%s'%self.suffix
         prefix='' if self.prefix==None else '%s_'%self.prefix
 
+        # Determine the binning method for the two variables
+        bins=[]
+        if hasattr(variable,'bins'):
+            bins+=[len(variable.bins)-1,array('d',variable.bins)]
+        else:
+            bins+=[variable.nbins,variable.minval,variable.maxval]
+
+
         h=TH1F("%s_%s_%s_%s"%(prefix,variable.name,category.name,suffix),
                category.title,
-               variable.nbins,
-               variable.minval,
-               variable.maxval)
+               *bins)
         if hasattr(category,'linecolor'):
             h.SetLineColor(category.linecolor)
         if hasattr(category,'linestyle'):
