@@ -176,6 +176,7 @@ class VariableSortedAnalysis(Analysis.Analysis):
             if not self.stack:
                 opts+='nostack'
             variable.hist.Draw(opts)
+            if variable.hist.GetXaxis().GetLabels()!=None: variable.hist.GetXaxis().LabelsOption('v')
 
             title=variable.title
             if hasattr(variable,'units') and variable.units!=None:
