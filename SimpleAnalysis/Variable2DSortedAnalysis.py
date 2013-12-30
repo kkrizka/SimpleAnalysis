@@ -132,7 +132,7 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         # Get the length of the value lists. We assume that all variables
         # have the same length.
         nValues=len(values[0])
-        nVariables=len(self.variables) # Might as well cache this..
+        nValuesRange=range(nValues)
 
         # Prepare a list of corresponding categories
         if type(category)!=list:
@@ -141,34 +141,19 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
             vcategory=category
             
         # Fill the histograms
-        for i1 in range(nVariables-1):
-            # Prepare var1
-            var1=self.variables[i1]
+        for key,histogram in self.histograms.items():
+            i1,i2=key
             values1=values[i1]
             if values1==None: continue # Do not fill if no value returned
+            values2=values[i2]
+            if values2==None: continue # Do not fill if no value returned
 
-            for i2 in range(i1+1,nVariables):
-                var2=self.variables[i2]
-
-                # Prepare var2
-                values2=values[i2]
-                if values2==None: continue # Do not fill if no value returned
-
-                # Key for this pair
-                key12=(i1,i2)
-                key21=(i2,i1)
-
-                hists12=self.histograms[key12] if key12 in self.histograms else None
-                hists21=self.histograms[key21] if key21 in self.histograms else None
-
-                # Fill the histograms
-                for j in range(nValues):
-                    val1=values1[j]
-                    val2=values2[j]
-                    vcat=vcategory[j]
-                    if vcat==None: continue
-                    if hists12!=None and vcat in hists12: hists12[vcat].Fill(val1[0],val2[0],val1[1])
-                    if hists21!=None and vcat in hists21: hists21[vcat].Fill(val2[0],val1[0],val2[1])
+            for j in nValuesRange:
+                val1=values1[j]
+                val2=values2[j]
+                vcat=vcategory[j]
+                if vcat==None: continue
+                if vcat in histogram: histogram[vcat].Fill(val1[0],val2[0],val1[1])
                     
     def deinit(self):
         # Draw
