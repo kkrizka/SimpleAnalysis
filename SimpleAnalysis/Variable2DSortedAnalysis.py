@@ -78,11 +78,19 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
                 var2=self.variables[i2]
                 var2.onlyaxis='both' if not hasattr(var2,'onlyaxis') else var2.onlyaxis
                 for category in self.categories:
-                    self.book_category(category,var1,var2)
+                    h=self.create_category(category,var1,var2)
+                    if h==None: continue
+                    
+                    # Save to the histograms array
+                    key=(i1,i2)
+                    if key not in self.histograms:
+                        self.histograms[key]={}
+                    self.histograms[key][category.name]=h
 
-    def book_category(self,category,var1,var2):
+
+    def create_category(self,category,var1,var2):
         # Axis settings
-        if var1.onlyaxis==var2.onlyaxis and var1.onlyaxis!='both': return # Skip duplicates
+        if var1.onlyaxis==var2.onlyaxis and var1.onlyaxis!='both': return None # Skip duplicates
 
         if var1.onlyaxis not in ['x','both']: return # var1 is y-axis..
         #
@@ -111,12 +119,8 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         h.var1=var1
         h.var2=var2
         h.category=category.name
-        
-        # Save to the histograms array
-        key=(self.variables.index(var1),self.variables.index(var2))
-        if key not in self.histograms:
-            self.histograms[key]={}
-        self.histograms[key][category.name]=h
+
+        return h
 
     def run_event(self):
         category=self.category.value() if self.category!=None else 'default'
