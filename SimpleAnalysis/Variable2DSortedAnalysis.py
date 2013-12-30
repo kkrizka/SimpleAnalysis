@@ -113,50 +113,56 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         h.category=category.name
         
         # Save to the histograms array
-        key=(var1,var2)
+        key=(self.variables.index(var1),self.variables.index(var2))
         if key not in self.histograms:
             self.histograms[key]={}
         self.histograms[key][category.name]=h
 
     def run_event(self):
-        if self.category!=None:
-            category=self.category.value()
-        else:
-            category='default'
+        category=self.category.value() if self.category!=None else 'default'
         if category==None: return
 
-        for i1 in range(len(self.variables)-1):
+        # Get values for all of the variables
+        values=[]
+        for variable in self.variables:
+            value=variable.wvalue()
+            if value!=None and type(value)!=list: value=[value]
+            values.append(value)
+
+        # Get the length of the value lists. We assume that all variables
+        # have the same length.
+        nValues=len(values[0])
+        nVariables=len(self.variables) # Might as well cache this..
+
+        # Prepare a list of corresponding categories
+        if type(category)!=list:
+            vcategory=[category]*nValues
+        else:
+            vcategory=category
+            
+        # Fill the histograms
+        for i1 in range(nVariables-1):
             # Prepare var1
             var1=self.variables[i1]
-            values1=var1.wvalue()
+            values1=values[i1]
             if values1==None: continue # Do not fill if no value returned
-            if type(values1)!=list:
-                values1=[values1]
 
-            # Prepare a list of corresponding categories
-            if type(category)!=list:
-                vcategory=[category]*len(values1)
-            else:
-                vcategory=category
-
-            for i2 in range(i1+1,len(self.variables)):
+            for i2 in range(i1+1,nVariables):
                 var2=self.variables[i2]
 
                 # Prepare var2
-                values2=var2.wvalue()
+                values2=values[i2]
                 if values2==None: continue # Do not fill if no value returned
-                if type(values2)!=list:
-                    values2=[values2]
 
                 # Key for this pair
-                key12=(var1,var2)
-                key21=(var2,var1)
+                key12=(i1,i2)
+                key21=(i2,i1)
 
                 hists12=self.histograms[key12] if key12 in self.histograms else None
                 hists21=self.histograms[key21] if key21 in self.histograms else None
 
                 # Fill the histograms
-                for j in range(len(values1)):
+                for j in range(nValues):
                     val1=values1[j]
                     val2=values2[j]
                     vcat=vcategory[j]
