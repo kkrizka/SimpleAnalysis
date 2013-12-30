@@ -169,21 +169,15 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         histograms=[]
         for key,hists in self.histograms.items():
             for cat,h in hists.items():
+                if h.Integral()==0.: continue # Skip empties
                 histograms.append(h)
 
         # Loop and save
         for h in histograms:
-            c.Clear()
-
-            # Skip empties
-            if h.Integral()==0.: continue
-            
             # Normalize histograms, if requested
             if self.norm_mode=='1':
                 h.Scale(1./h.Integral())
             
-            h.Draw('COLZ')
-
             title1=h.var1.title
             if hasattr(h.var1,'units') and h.var1.units!=None:
                 title1+=' (%s)'%h.var1.units
@@ -194,7 +188,9 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
                 title2+=' (%s)'%h.var2.units
             h.SetYTitle(title2)
 
-            c.Update()
+            if self.output_type in ['png','eps']: # Draw if saving image
+                c.Clear()
+                h.Draw('COLZ')
 
             # Print it out
             outfileName=h.GetName().replace('/','-')
