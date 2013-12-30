@@ -4,6 +4,8 @@ import OutputFactory
 import PointerFactory
 import Timing
 
+import sys
+
 ##
 # This is a general class for calculating a variable for an event. 
 #
@@ -372,7 +374,8 @@ class Manager:
 
     # Called after stuff is done runnning
     def deinit(self):
-        for analysis in self.analysis:
+        while len(self.analysis)>0:
+            analysis=self.analysis.pop(0)
             analysis.deinit()
 
     # This takes care of running everything. After you setup the
