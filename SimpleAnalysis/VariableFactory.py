@@ -1,4 +1,6 @@
 from SimpleAnalysis import Analysis
+import traceback
+import sys
 
 _cache=dict()
 
@@ -66,9 +68,10 @@ class CachedVariable(Analysis.Variable):
 
     # Access to members of this variable
     def __getattr__(self,attr):
-        if hasattr(self.variable,attr):
-            return getattr(self.variable,attr)
-        raise AttributeError
+        #print self.variable,attr,'__GETATTR__'
+        #traceback.print_stack(file=sys.stdout)
+        if attr[0:2]=='__' and attr[-2:]=='__': raise AttributeError
+        return getattr(self.variable,attr)
 
     # The value returned by this variable, with cache lookup.
     def value(self):
