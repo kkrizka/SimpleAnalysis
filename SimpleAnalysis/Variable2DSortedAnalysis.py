@@ -60,40 +60,32 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
         self.output_type='png'
         self.logz=False
 
+        self.categoriesDict={}
         self.histograms={}
 
     def init(self):
         # Create a default category, if none exist
         if len(self.categories)==0:
             category=Category.Category('default','Default')
-            self.categories.append(category)    
+            self.categories.append(category)
+        self.categoriesDict=dict((category.name,category) for category in self.categories)
 
         # Book histograms for all the variables
-        for i1 in range(len(self.variables)):
+        for i1 in range(len(self.variables)): # X variable
             var1=self.variables[i1]
-            var1.onlyaxis='both' if not hasattr(var1,'onlyaxis') else var1.onlyaxis
-            for i2 in range(len(self.variables)):
+            var1.onlyaxis=getattr(var1,'onlyaxis','both')
+            if var1.onlyaxis=='y': continue
+            for i2 in range(len(self.variables)): # Y variable
                 if i1==i2: continue
                 
                 var2=self.variables[i2]
-                var2.onlyaxis='both' if not hasattr(var2,'onlyaxis') else var2.onlyaxis
-                for category in self.categories:
-                    h=self.create_category(category,var1,var2)
-                    if h==None: continue
-                    
-                    # Save to the histograms array
-                    key=(i1,i2)
-                    if key not in self.histograms:
-                        self.histograms[key]={}
-                    self.histograms[key][category.name]=h
+                var2.onlyaxis=getattr(var2,'onlyaxis','both')
+                if var2.onlyaxis=='x': continue
 
+                key=(i1,i2)
+                self.histograms[key]={}
 
     def create_category(self,category,var1,var2):
-        # Axis settings
-        if var1.onlyaxis==var2.onlyaxis and var1.onlyaxis!='both': return None # Skip duplicates
-
-        if var1.onlyaxis not in ['x','both']: return # var1 is y-axis..
-        #
         suffix='' if self.suffix==None else '_%s'%self.suffix
         prefix='' if self.prefix==None else '%s_'%self.prefix
 
@@ -157,7 +149,12 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
                 val2=values2[j]
                 vcat=vcategory[j]
                 if vcat==None: continue
-                if vcat in histogram: histogram[vcat].Fill(val1[0],val2[0],val1[1])
+                if vcat not in self.categoriesDict: continue
+                if vcat not in histogram:
+                    histogram[vcat]=self.create_category(self.categoriesDict[vcat],
+                                                         self.variables[i1],
+                                                         self.variables[i2])
+                histogram[vcat].Fill(val1[0],val2[0],val1[1])
                     
     def deinit(self):
         # Draw
