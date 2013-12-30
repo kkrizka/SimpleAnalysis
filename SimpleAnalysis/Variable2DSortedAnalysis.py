@@ -179,13 +179,13 @@ class Variable2DSortedAnalysis(Analysis.Analysis):
                 h.Scale(1./h.Integral())
             
             title1=h.var1.title
-            if hasattr(h.var1,'units') and h.var1.units!=None:
-                title1+=' (%s)'%h.var1.units
+            units1=getattr(h.var1,'units',None)
+            if units1!=None: title1+=' (%s)'%h.var1.units
             h.SetXTitle(title1)
 
             title2=h.var2.title
-            if hasattr(h.var2,'units') and h.var2.units!=None:
-                title2+=' (%s)'%h.var2.units
+            units2=getattr(h.var2,'units',None)
+            if units2!=None: title2+=' (%s)'%h.var2.units
             h.SetYTitle(title2)
 
             if self.output_type in ['png','eps']: # Draw if saving image
