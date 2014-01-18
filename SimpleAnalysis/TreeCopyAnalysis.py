@@ -9,14 +9,22 @@ import os.path
 # A simple analysis class that copies the branches from an input TTree and stores
 # the result in an output TTree. This is done only for events that pass a cut.
 #
-# The result is stored in the results directory, inside a file named same as
-# set in eventfile.output (or output.root if the attribute does not exist).
+# The tree name is copied, unless analysis.treeName is set.
+#
+# The result is stored in the results directory, inside a file based on the
+# following criteria:
+#  1) Using eventfile.output, if set
+#  2) Using analysis.output, if set
+#  3) The name of the input file
 class TreeCopyAnalysis(Analysis.Analysis):
     def __init__(self):
         Analysis.Analysis.__init__(self)
 
         self.fh=None
         self.tree=None
+
+        self.output=None
+        self.treeName=None
 
         self.variables=[]
         self.branches=[]
@@ -61,6 +69,8 @@ class TreeCopyAnalysis(Analysis.Analysis):
     def init_eventfile(self):
         if hasattr(self.eventfile,'output'):
             self.fh=OutputFactory.getTFile(self.eventfile.output)
+        elif self.output!=None:
+            self.fh=OutputFactory.getTFile(self.output)
         else:
             self.fh=OutputFactory.getTFile(os.path.basename(self.eventfile.path))
 
@@ -89,6 +99,8 @@ class TreeCopyAnalysis(Analysis.Analysis):
             
         self.tree=self.eventfile.tree.CloneTree(0)
         self.eventfile.tree.CopyAddresses(self.tree)
+
+        if self.treeName!=None: self.tree.SetName(self.treeName)
 
         # Create branches for new variables
         for var in self.variables:
@@ -120,7 +132,3 @@ class TreeCopyAnalysis(Analysis.Analysis):
 
         # Write
         self.tree.Fill()
-
-    def deinit_eventfile(self):
-        self.fh.cd()
-        self.tree.Write()
