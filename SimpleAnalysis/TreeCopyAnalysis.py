@@ -16,6 +16,11 @@ import os.path
 #  1) Using eventfile.output, if set
 #  2) Using analysis.output, if set
 #  3) The name of the input file
+#
+# Branch list to copy is determined from the branches attribute
+#  1) If it is an empty list, no branches are copied
+#  2) If it is a list with branch names, the listed branches are included
+#  3) If it is set to None, then all branches are copied (Default)
 class TreeCopyAnalysis(Analysis.Analysis):
     def __init__(self):
         Analysis.Analysis.__init__(self)
@@ -27,7 +32,7 @@ class TreeCopyAnalysis(Analysis.Analysis):
         self.treeName=None
 
         self.variables=[]
-        self.branches=[]
+        self.branches=None
         self.trees=[]
 
     def init(self):
@@ -92,7 +97,7 @@ class TreeCopyAnalysis(Analysis.Analysis):
         self.fh.cd()
 
         # Create the output tree
-        if len(self.branches)==0: self.eventfile.tree.SetBranchStatus('*',1) # copy all branches
+        if self.branches==None: self.eventfile.tree.SetBranchStatus('*',1) # copy all branches
         else: # only copy requested branches
             for branch in self.branches:
                 self.eventfile.tree.SetBranchStatus(branch,1)
