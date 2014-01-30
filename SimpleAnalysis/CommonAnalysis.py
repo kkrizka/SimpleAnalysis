@@ -121,7 +121,7 @@ class VariableFlagCut(Analysis.Cut):
     ## Cut method
     def cut(self):
         value=self.variable.value()
-        if value==0: return True
+        if value==0 or value==None: return True
         else: return False
 
 
