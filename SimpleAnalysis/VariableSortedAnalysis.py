@@ -133,7 +133,9 @@ class VariableSortedAnalysis(Analysis.Analysis):
             for j in range(len(values)):
                 value=values[j]
                 vcat=vcategory[j]
-                if vcat==None or vcat not in variable.categories: continue
+                if vcat==None or vcat not in variable.categories: # This is an uncategorized thing
+                    vcat=None
+                    if vcat not in variable.categories: continue # We do not have a "default" category
                 h=variable.categories[vcat]
                 h.Fill(value[0],value[1])
 
