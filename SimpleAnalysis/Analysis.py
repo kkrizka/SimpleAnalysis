@@ -191,6 +191,11 @@ class EventFile:
                 types.append('vector<TLorentzVector>')
             else:
                 return (None,None) # This is some weird composite type...
+        elif branch.GetClassName()!='': #Determine type by looking at object
+            if branch.GetClassName()=='TClonesArray':
+                types.append((branch.GetClassName(),branch.GetClonesName()))
+            else:
+                types.append(branch.GetClassName())
         else: # Determine type by looking at leaves
             leaves=branch.GetListOfLeaves()
             for leaf in leaves:

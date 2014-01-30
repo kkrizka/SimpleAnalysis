@@ -22,5 +22,7 @@ def get(typename):
         pointer=std.__getattr__(typename)()
     elif typename=='TVector2':
         pointer=TVector2()
+    elif typename[0]=='TClonesArray':
+        pointer=TClonesArray(typename[1])
 
     return pointer
