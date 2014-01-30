@@ -105,8 +105,10 @@ class Cut:
 
 ## This is a class that describes an event file.
 ## The required input parameters are:
-##  path - The path to the ROOT file holding the TPythia8 data
-##  treeName - The name of the tree holding the TPythia8 data
+##  path - The path to the ROOT file
+##  treeName - The name of the tree to loop over
+##
+## Any extra keyed arguments are set as attributes.
 ##
 ## There are also some other parameters required by different derivatives
 ## of the Analysis class.
@@ -117,7 +119,7 @@ class Cut:
 ##  tree - The TTree being used
 ##  
 class EventFile:
-    def __init__(self,path,treeName):
+    def __init__(self,path,treeName,*args,**kwargs):
         self.path=path
         self.treeName=treeName
 
@@ -129,6 +131,10 @@ class EventFile:
         self.eventidx=None
         self.branch_pointers={}
         self.branch_type={}
+
+        for k in kwargs:
+            v=kwargs[k]
+            setattr(self,k,v)
         
     # Load the tree from the file and store it into the tree member
     # attribute. Set it to None if the tree is not found.
