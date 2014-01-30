@@ -185,8 +185,8 @@ class VariableSortedAnalysis(Analysis.Analysis):
                 title+=' (%s)'%variable.units
             variable.hist.GetXaxis().SetTitle(title)
 
-            if len(variable.categories)>1:
-                l=c.BuildLegend(.65,.98-len(variable.categories)*0.04,.98,.98)
+            if len(hists)>1:
+                l=c.BuildLegend(.65,.98-len(hists)*0.04,.98,.98)
                 l.Draw()
             c.Update()
 
