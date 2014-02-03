@@ -100,6 +100,26 @@ class VariableEqualCut(Analysis.Cut):
         if value!=self.val: return True
         else: return False
 
+## A generic cut that bitwise-AND's a variable with a number and reject the event
+## if the result is 0.
+class VariableBitmaskCut(Analysis.Cut):
+    ## Arguments:
+    ## - variable: An Analysis.Variable object that cuts will be run on
+    ## - bitmask: The value that is used as bitmask
+    ## - invert: Boolean indicating whether the cut should be inverted.
+    ##           Inverted cuts reject events with values not equal to val.
+    ##           (Default: False)
+    def __init__(self,variable,bitmask,invert=False):
+        Analysis.Cut.__init__(self,invert)
+        self.thevariable=variable
+        self.bitmask=bitmask
+
+    ## Cut method
+    def cut(self):
+        value=self.thevariable.value()
+        if value&self.bitmask==0: return True
+        else: return False
+
 ## A generic cut that uses any variable and rejects events that have the
 ## variable equal to zero.
 ##
